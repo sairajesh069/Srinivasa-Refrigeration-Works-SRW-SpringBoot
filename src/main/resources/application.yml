@@ -1,0 +1,17 @@
+# Spring application configuration
+spring:
+
+  application:
+    name: srw-springboot  # Name of the application
+
+  server:
+    port: ${PORT:8080}  # Dynamic port provided by Railway
+    session:
+      timeout: 1440m  # Set session timeout to 24 hours
+
+---
+# Development profile configuration
+spring:
+  config:
+    activate:
+      on-profile: dev  # Set profile to 'dev' for production environment
