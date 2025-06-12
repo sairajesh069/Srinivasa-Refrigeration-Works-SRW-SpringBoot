@@ -9,9 +9,33 @@ spring:
     session:
       timeout: 1440m  # Set session timeout to 24 hours
 
+  jpa:
+    hibernate:
+      ddl-auto: update  # Auto-update schema
+    show-sql: false  # Disables logging of SQL queries
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect  # MySQL dialect for Hibernate
+    open-in-view: false  # Disable open-in-view to prevent lazy loading during view rendering
+
+  cache:
+    type: redis  # Redis as the cache provider
+
 ---
 # Development profile configuration
 spring:
   config:
     activate:
       on-profile: dev  # Set profile to 'dev' for production environment
+
+  datasource:
+    url: ${DEV_DB_URL}  # Dynamic database URL for development
+    username: ${DEV_DB_USERNAME}  # Dynamic database username for development
+    password: ${DEV_DB_PASSWORD}  # Dynamic database password for development
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL JDBC driver
+
+  redis:
+    host: ${DEV_REDIS_HOST}  # Redis host for dev environment
+    port: ${DEV_REDIS_PORT}  # Redis port for dev environment
+  cache:
+    redis:
+      time-to-live: 900000  # TTL in milliseconds
