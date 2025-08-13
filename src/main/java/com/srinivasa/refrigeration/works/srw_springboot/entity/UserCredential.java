@@ -9,7 +9,15 @@ import java.io.Serial;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "user_credentials")
+@Table(
+        name = "user_credentials",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UK_user_id", columnNames = "user_id"),
+                @UniqueConstraint(name = "UK_username", columnNames = "username"),
+                @UniqueConstraint(name = "UK_user_email", columnNames = "email"),
+                @UniqueConstraint(name = "UK_user_phone", columnNames = "phone_number")
+        }
+)
 @Data
 @NoArgsConstructor
 public class UserCredential implements Serializable {

@@ -11,7 +11,15 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "customers")
+@Table(
+        name = "customers",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UK_user_reference", columnNames = "customer_reference"),
+                @UniqueConstraint(name = "UK_user_id", columnNames = "customer_id"),
+                @UniqueConstraint(name = "UK_user_email", columnNames = "email"),
+                @UniqueConstraint(name = "UK_user_phone", columnNames = "phone_number")
+        }
+)
 @Data
 @NoArgsConstructor
 public class Customer implements Serializable {
