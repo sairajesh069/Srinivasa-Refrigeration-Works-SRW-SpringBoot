@@ -6,6 +6,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerCred
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.CustomerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import jakarta.transaction.Transactional;
@@ -25,10 +26,11 @@ public class CustomerService {
     @CacheEvict(cacheNames = "customers", allEntries = true)
     public CustomerDTO addCustomer(CustomerCredentialDTO customerCredentialDTO) {
         Customer customer = customerMapper.toEntity(customerCredentialDTO.getCustomerDTO());
+        customer.setCustomerReference(Long.parseLong(UserIdGenerator.generateUniqueId(customer.getPhoneNumber())));
+        customer.setCustomerId("SRW" + customer.getCustomerReference() + "CUST");
         customer.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(customer.getPhoneNumber()));
         customer.setStatus(UserStatus.ACTIVE);
         customerRepository.save(customer);
-        customer.setCustomerId("SRW" + String.format("%07d", customer.getCustomerReference()));
         userCredentialService.saveCredential(customerCredentialDTO.getUserCredentialDTO(), customer.getCustomerId(), UserType.CUSTOMER);
         return customerMapper.toDto(customer);
     }

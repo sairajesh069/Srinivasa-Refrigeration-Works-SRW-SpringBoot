@@ -28,7 +28,6 @@ public class Customer implements Serializable {
     private static final long serialVersionUID = 20L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_reference", unique = true)
     private Long customerReference;
 
