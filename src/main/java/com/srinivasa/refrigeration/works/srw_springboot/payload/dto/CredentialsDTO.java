@@ -15,8 +15,8 @@ import java.io.Serializable;
 public class CredentialsDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 10;
+    private static final long serialVersionUID = 10L;
 
-    private String username;
+    private String loginId;
     private String password;
 }

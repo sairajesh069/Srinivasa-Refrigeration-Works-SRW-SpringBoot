@@ -39,3 +39,7 @@ spring:
   cache:
     redis:
       time-to-live: 900000  # TTL in milliseconds
+
+jwt:
+  secret: ${DEV_JWT_SECRET}
+  expiration: ${DEV_JWT_EXPIRATION}

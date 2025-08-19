@@ -12,11 +12,13 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerCredentialDTO implements Serializable {
+public class AuthenticatedUserDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 22L;
+    private static final long serialVersionUID = 11L;
 
-    private CustomerDTO customerDTO;
-    private UserCredentialDTO userCredentialDTO;
+    private String userId;
+    private String firstName;
+    private String lastName;
+    private String userType;
 }
