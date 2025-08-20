@@ -5,6 +5,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsD
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LogoutResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LoginResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
+import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
 import com.srinivasa.refrigeration.works.srw_springboot.service.UserCredentialService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/srw")
@@ -29,6 +29,7 @@ public class LoginController {
     private final JwtUtil jwtUtil;
     private final UserCredentialService userCredentialService;
     private final CustomerService customerService;
+    private final OwnerService ownerService;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -47,6 +48,9 @@ public class LoginController {
             AuthenticatedUserDTO authenticatedUserDTO = null;
             if(userType.equals("CUSTOMER")) {
                 authenticatedUserDTO = (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true);
+            }
+            else if(userType.equals("OWNER")) {
+                authenticatedUserDTO = (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
             }
             LoginResponseBody successResponse = new LoginResponseBody(
                     "Login success",

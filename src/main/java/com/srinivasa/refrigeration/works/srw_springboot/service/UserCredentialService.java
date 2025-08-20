@@ -29,6 +29,7 @@ public class UserCredentialService {
         userCredential.setUserId(userId);
         userCredential.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(userCredential.getPhoneNumber()));
         userCredential.setUserType(userType);
+        userCredential.setEnabled(userType.equals(UserType.CUSTOMER) ? (short) 1 : (short) 0);
         userCredential.setPassword(passwordEncoder.encode(userCredential.getPassword()));
         userCredentialRepository.save(userCredential);
     }

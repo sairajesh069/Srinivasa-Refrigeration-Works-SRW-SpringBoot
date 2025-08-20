@@ -1,0 +1,31 @@
+package com.srinivasa.refrigeration.works.srw_springboot.payload.dto;
+
+import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDate;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class OwnerDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 41L;
+
+    private String ownerId;
+    private String firstName;
+    private String lastName;
+    private LocalDate dateOfBirth;
+    private String gender;
+    private String phoneNumber;
+    private String email;
+    private String address;
+    private UserStatus status;
+}

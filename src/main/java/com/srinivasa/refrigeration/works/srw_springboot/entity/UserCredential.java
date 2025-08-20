@@ -4,9 +4,14 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 
 @Entity
 @Table(
@@ -20,7 +25,7 @@ import java.io.Serializable;
 )
 @Data
 @NoArgsConstructor
-public class UserCredential implements Serializable {
+public class UserCredential implements UserDetails, Serializable {
 
     @Serial
     private static final long serialVersionUID = 30L;
@@ -47,4 +52,31 @@ public class UserCredential implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
     private UserType userType;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + userType.name())
+        );
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.enabled == 1;
+    }
 }
