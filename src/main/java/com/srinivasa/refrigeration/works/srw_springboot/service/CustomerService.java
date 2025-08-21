@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,7 +29,7 @@ public class CustomerService {
     @CacheEvict(cacheNames = "customers", allEntries = true)
     public CustomerDTO addCustomer(CustomerCredentialDTO customerCredentialDTO) {
         Customer customer = customerMapper.toEntity(customerCredentialDTO.getCustomerDTO());
-        customer.setCustomerReference(Long.parseLong(UserIdGenerator.generateUniqueId(customer.getPhoneNumber())));
+        customer.setCustomerReference(UserIdGenerator.generateUniqueId(customer.getPhoneNumber()));
         customer.setCustomerId("SRW" + customer.getCustomerReference() + "CUST");
         customer.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(customer.getPhoneNumber()));
         customer.setStatus(UserStatus.ACTIVE);

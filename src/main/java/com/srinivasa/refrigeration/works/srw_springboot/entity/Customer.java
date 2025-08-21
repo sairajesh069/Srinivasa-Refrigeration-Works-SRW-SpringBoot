@@ -29,7 +29,7 @@ public class Customer implements Serializable {
 
     @Id
     @Column(name = "customer_reference", unique = true)
-    private Long customerReference;
+    private String customerReference;
 
     @Column(name = "customer_id", unique = true)
     private String customerId;

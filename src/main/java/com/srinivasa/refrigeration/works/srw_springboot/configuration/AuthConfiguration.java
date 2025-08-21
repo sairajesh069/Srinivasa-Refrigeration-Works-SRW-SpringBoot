@@ -57,7 +57,7 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/home", "/srw/login").permitAll()
                         .requestMatchers("/srw/customer/register").permitAll()
                         .requestMatchers("/debug/auth").permitAll()
-                        .requestMatchers("/srw/owner/register").hasRole("OWNER")
+                        .requestMatchers("/srw/owner/register", "/srw/employee/register").hasRole("OWNER")
                         .anyRequest().authenticated())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

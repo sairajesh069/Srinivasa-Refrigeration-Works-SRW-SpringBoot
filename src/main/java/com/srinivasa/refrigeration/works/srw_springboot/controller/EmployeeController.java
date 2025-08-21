@@ -1,9 +1,9 @@
 package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
+import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
 import lombok.RequiredArgsConstructor;
@@ -16,45 +16,45 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/srw/owner")
+@RequestMapping("/srw/employee")
 @RequiredArgsConstructor
-public class OwnerController {
+public class EmployeeController {
 
-    private final OwnerService ownerService;
+    private final EmployeeService employeeService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegisterResponseBody<OwnerDTO>> register(@RequestBody OwnerCredentialDTO ownerCredentialDTO) {
-        OwnerDTO ownerDTO = ownerCredentialDTO.getOwnerDTO();
+    public ResponseEntity<UserRegisterResponseBody<EmployeeDTO>> register(@RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
+        EmployeeDTO employeeDTO = employeeCredentialDTO.getEmployeeDTO();
         try {
-            ownerDTO = ownerService.addOwner(ownerCredentialDTO);
-            UserRegisterResponseBody<OwnerDTO> successResponse = new UserRegisterResponseBody<>(
+            employeeDTO = employeeService.addEmployee(employeeCredentialDTO);
+            UserRegisterResponseBody<EmployeeDTO> successResponse = new UserRegisterResponseBody<>(
                     "Registered successfully. Please login",
                     HttpStatus.OK.value(),
-                    ownerDTO
+                    employeeDTO
             );
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
-                    DuplicateValueCheck.buildDuplicateValueErrorResponse("owners", exception),
+            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
+                    DuplicateValueCheck.buildDuplicateValueErrorResponse("employees", exception),
                     HttpStatus.CONFLICT.value(),
-                    ownerDTO
+                    employeeDTO
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
         catch (UserValidationException exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
+            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.CONFLICT.value(),
-                    ownerDTO
+                    employeeDTO
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
         catch(Exception exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
+            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    ownerDTO
+                    employeeDTO
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

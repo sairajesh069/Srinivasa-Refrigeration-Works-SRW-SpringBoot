@@ -6,6 +6,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LogoutR
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LoginResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
 import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
+import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.service.UserCredentialService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
@@ -30,6 +31,7 @@ public class LoginController {
     private final UserCredentialService userCredentialService;
     private final CustomerService customerService;
     private final OwnerService ownerService;
+    private final EmployeeService employeeService;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -51,6 +53,9 @@ public class LoginController {
             }
             else if(userType.equals("OWNER")) {
                 authenticatedUserDTO = (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
+            }
+            else if(userType.equals("EMPLOYEE")) {
+                authenticatedUserDTO = (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true);
             }
             LoginResponseBody successResponse = new LoginResponseBody(
                     "Login success",

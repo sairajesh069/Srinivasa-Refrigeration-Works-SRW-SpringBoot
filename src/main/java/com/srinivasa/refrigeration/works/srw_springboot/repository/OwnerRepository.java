@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OwnerRepository extends JpaRepository<Owner, Long> {
 
-    @Query("SELECT o FROM Owner o WHERE o.ownerId = :identifier OR o.phoneNumber = :identifier OR o.email = :identifier")
-    public Owner findByIdentifier(@Param("identifier") String identifier);
+    @Query("SELECT o FROM Owner o WHERE o.ownerId = :identifier OR o.phoneNumber = :identifier OR o.email = :identifier OR o.nationalIdNumber = :identifier")
+    Owner findByIdentifier(@Param("identifier") String identifier);
 }

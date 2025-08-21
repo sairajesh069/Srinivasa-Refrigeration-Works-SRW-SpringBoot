@@ -14,6 +14,7 @@ public class DuplicateValueCheck {
                     userType + ".UK_user_id", "Duplicate user id",
                     userType + ".UK_user_email", "Duplicate email address",
                     userType + ".UK_user_phone", "Duplicate phone number",
+                    userType + ".UK_user_national_id_number", "Duplicate national id number",
                     "user_credentials.UK_username", "Duplicate username",
                     "user_credentials.UK_user_email", "Duplicate email address",
                     "user_credentials.UK_user_phone", "Duplicate phone number"

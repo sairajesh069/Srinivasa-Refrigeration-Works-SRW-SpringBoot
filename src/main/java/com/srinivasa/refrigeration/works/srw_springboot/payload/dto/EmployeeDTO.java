@@ -9,17 +9,18 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OwnerDTO implements Serializable {
+public class EmployeeDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 41L;
+    private static final long serialVersionUID = 51L;
 
-    private String ownerId;
+    private String employeeId;
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
@@ -28,5 +29,9 @@ public class OwnerDTO implements Serializable {
     private String email;
     private String address;
     private String nationalIdNumber;
+    private LocalDateTime dateOfHire;
+    private String designation;
+    private Long salary;
+    private LocalDateTime dateOfExit;
     private UserStatus status;
 }

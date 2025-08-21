@@ -5,11 +5,9 @@ import com.srinivasa.refrigeration.works.srw_springboot.mapper.OwnerMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AuthenticatedUserDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.repository.EmployeeRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.OwnerRepository;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,16 +20,20 @@ public class OwnerService {
     
     private final OwnerRepository ownerRepository;
     private final OwnerMapper ownerMapper;
+    private final EmployeeRepository employeeRepository;
     private final UserCredentialService userCredentialService;
 
     @Transactional
     @CacheEvict(cacheNames = "owners", allEntries = true)
     public OwnerDTO addOwner(OwnerCredentialDTO ownerCredentialDTO) {
         Owner owner = ownerMapper.toEntity(ownerCredentialDTO.getOwnerDTO());
-        owner.setOwnerReference(Long.parseLong(UserIdGenerator.generateUniqueId(owner.getPhoneNumber())));
+        owner.setOwnerReference(UserIdGenerator.generateUniqueId(owner.getPhoneNumber()));
         owner.setOwnerId("SRW" + owner.getOwnerReference() + "OWNR");
         owner.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(owner.getPhoneNumber()));
         owner.setStatus(UserStatus.IN_ACTIVE);
+        if(employeeRepository.findByIdentifier(owner.getNationalIdNumber()) != null) {
+            throw new UserValidationException("Duplicate national id number");
+        }
         ownerRepository.save(owner);
         userCredentialService.saveCredential(ownerCredentialDTO.getUserCredentialDTO(), owner.getOwnerId(), UserType.OWNER);
         return ownerMapper.toDto(owner);
