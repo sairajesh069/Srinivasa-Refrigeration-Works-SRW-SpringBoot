@@ -55,8 +55,8 @@ public class AuthConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/srw/home", "/srw/login").permitAll()
+                        .requestMatchers("/srw/forgot-username", "/srw/validate-user", "/srw/forgot-password").permitAll()
                         .requestMatchers("/srw/customer/register").permitAll()
-                        .requestMatchers("/debug/auth").permitAll()
                         .requestMatchers("/srw/owner/register", "/srw/employee/register").hasRole("OWNER")
                         .anyRequest().authenticated())
                 .sessionManagement(session ->
