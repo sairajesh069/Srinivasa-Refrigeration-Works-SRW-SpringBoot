@@ -1,7 +1,8 @@
 package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
@@ -10,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/srw/employee")
@@ -52,6 +50,28 @@ public class EmployeeController {
         }
         catch(Exception exception) {
             UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    employeeDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponseBody<EmployeeDTO>> fetchProfile(@RequestParam("employeeId") String employeeId) {
+        EmployeeDTO employeeDTO = null;
+        try {
+            employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false);
+            UserProfileResponseBody<EmployeeDTO> successResponse = new UserProfileResponseBody<>(
+                    "User profile fetched successfully.",
+                    HttpStatus.OK.value(),
+                    employeeDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            UserProfileResponseBody<EmployeeDTO> errorResponse = new UserProfileResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     employeeDTO

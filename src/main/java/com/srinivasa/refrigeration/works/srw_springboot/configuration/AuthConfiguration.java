@@ -58,6 +58,9 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/forgot-username", "/srw/validate-user", "/srw/forgot-password").permitAll()
                         .requestMatchers("/srw/customer/register").permitAll()
                         .requestMatchers("/srw/owner/register", "/srw/employee/register").hasRole("OWNER")
+                        .requestMatchers("/srw/owner/profile").hasRole("OWNER")
+                        .requestMatchers("/srw/employee/profile").hasRole("EMPLOYEE")
+                        .requestMatchers("/srw/customer/profile").hasRole("CUSTOMER")
                         .anyRequest().authenticated())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

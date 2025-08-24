@@ -38,7 +38,7 @@ public class CustomerService {
         return customerMapper.toDto(customer);
     }
 
-    @Cacheable(value = "customer", key = "'fetch-' + #identifier")
+    @Cacheable(value = "customer", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
     public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating) {
         Customer customer = customerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);

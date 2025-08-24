@@ -5,9 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UserRegisterResponseBody<UserDTO> {
+public class UserProfileResponseBody<UserDTO> {
 
-    public UserRegisterResponseBody(String message, int status, UserDTO userDTO) {
+    public UserProfileResponseBody(String message, int status, UserDTO userDTO) {
         this.message = message;
         this.status = status;
         this.userDTO = userDTO;

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -28,5 +29,7 @@ public class OwnerDTO implements Serializable {
     private String email;
     private String address;
     private String nationalIdNumber;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private UserStatus status;
 }

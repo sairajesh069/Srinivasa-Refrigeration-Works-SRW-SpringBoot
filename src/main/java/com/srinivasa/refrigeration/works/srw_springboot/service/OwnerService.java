@@ -39,7 +39,7 @@ public class OwnerService {
         return ownerMapper.toDto(owner);
     }
 
-    @Cacheable(value = "owner", key = "'fetch-' + #identifier")
+    @Cacheable(value = "owner", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
     public Object getOwnerByIdentifier(String identifier, boolean isAuthenticating) {
         Owner owner = ownerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);

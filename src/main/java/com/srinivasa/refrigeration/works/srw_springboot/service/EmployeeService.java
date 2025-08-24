@@ -39,7 +39,7 @@ public class EmployeeService {
         return employeeMapper.toDto(employee);
     }
 
-    @Cacheable(value = "employee", key = "'fetch-' + #identifier")
+    @Cacheable(value = "employee", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
     public Object getEmployeeByIdentifier(String identifier, boolean isAuthenticating) {
         Employee employee = employeeRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);

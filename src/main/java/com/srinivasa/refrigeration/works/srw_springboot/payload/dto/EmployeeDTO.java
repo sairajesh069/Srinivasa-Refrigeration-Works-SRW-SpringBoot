@@ -33,5 +33,6 @@ public class EmployeeDTO implements Serializable {
     private String designation;
     private Long salary;
     private LocalDateTime dateOfExit;
+    private LocalDateTime updatedAt;
     private UserStatus status;
 }

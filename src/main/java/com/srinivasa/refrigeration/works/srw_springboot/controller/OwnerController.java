@@ -1,7 +1,8 @@
 package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
@@ -10,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/srw/owner")
@@ -52,6 +50,28 @@ public class OwnerController {
         }
         catch(Exception exception) {
             UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    ownerDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponseBody<OwnerDTO>> fetchProfile(@RequestParam("ownerId") String ownerId) {
+        OwnerDTO ownerDTO = null;
+        try {
+            ownerDTO = (OwnerDTO) ownerService.getOwnerByIdentifier(ownerId, false);
+            UserProfileResponseBody<OwnerDTO> successResponse = new UserProfileResponseBody<>(
+                    "User profile fetched successfully.",
+                    HttpStatus.OK.value(),
+                    ownerDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            UserProfileResponseBody<OwnerDTO> errorResponse = new UserProfileResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     ownerDTO

@@ -1,5 +1,6 @@
 package com.srinivasa.refrigeration.works.srw_springboot.payload.dto;
 
+import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -24,4 +27,7 @@ public class CustomerDTO implements Serializable {
     private String phoneNumber;
     private String email;
     private String address;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private UserStatus status;
 }
