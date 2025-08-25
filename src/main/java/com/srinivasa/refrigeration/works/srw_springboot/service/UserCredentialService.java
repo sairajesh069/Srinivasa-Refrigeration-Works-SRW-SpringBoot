@@ -3,6 +3,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.service;
 import com.srinivasa.refrigeration.works.srw_springboot.entity.UserCredential;
 import com.srinivasa.refrigeration.works.srw_springboot.mapper.UserCredentialMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AccountRecoveryDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ChangePasswordDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UserCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.UserCredentialRepository;
@@ -59,10 +60,12 @@ public class UserCredentialService {
         );
     }
 
-    @Cacheable(value = "user-credential", key = "'fetch_user-' + #phoneNumber")
-    public String fetchUsername(String phoneNumber) {
+    @Cacheable(value = "user-credential", key = "'fetch_user-' + #identifier")
+    public String fetchUsername(String identifier) {
           UserCredential userCredential = userCredentialRepository
-                  .findByIdentifier(PhoneNumberFormatter.formatPhoneNumber(phoneNumber))
+                  .findByIdentifier(identifier.matches("^[0-9]{10}$")
+                          ? PhoneNumberFormatter.formatPhoneNumber(identifier)
+                          : identifier)
                   .orElse(null);
           return userCredential != null ? userCredential.getUsername() : null;
     }
@@ -74,8 +77,23 @@ public class UserCredentialService {
     }
 
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
-    public void updatePassword(AccountRecoveryDTO accountRecoveryDTO) {
-        userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(), passwordEncoder.encode(accountRecoveryDTO.getPassword()));
+    public void updatePassword(Object DTO, boolean isAuthenticated) {
+        if(isAuthenticated) {
+            ChangePasswordDTO changePasswordDTO = (ChangePasswordDTO) DTO;
+            UserCredential userCredential = userCredentialRepository
+                    .findByIdentifier(changePasswordDTO.getUsername())
+                    .orElse(null);
+            if(userCredential != null && !passwordEncoder.matches(changePasswordDTO.getOldPassword(), userCredential.getPassword())) {
+                throw new UserValidationException("Invalid current password");
+            }
+            userCredentialRepository.updatePassword(changePasswordDTO.getUsername(),
+                    passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        }
+        else {
+            AccountRecoveryDTO accountRecoveryDTO = (AccountRecoveryDTO) DTO;
+            userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(),
+                    passwordEncoder.encode(accountRecoveryDTO.getPassword()));
+        }
     }
 
     @CacheEvict(cacheNames = "user-credential", allEntries = true)

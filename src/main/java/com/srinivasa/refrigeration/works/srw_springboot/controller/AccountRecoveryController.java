@@ -80,7 +80,7 @@ public class AccountRecoveryController {
     @PostMapping("/forgot-password")
     public ResponseEntity<AccountRecoveryResponseBody> resetPassword(@RequestBody AccountRecoveryDTO accountRecoveryDTO) {
         try {
-            userCredentialService.updatePassword(accountRecoveryDTO);
+            userCredentialService.updatePassword(accountRecoveryDTO, false);
             AccountRecoveryResponseBody successResponse = new AccountRecoveryResponseBody(
                     "Password has been reset successfully.",
                     HttpStatus.OK.value()
@@ -90,9 +90,9 @@ public class AccountRecoveryController {
         catch (Exception exception) {
             AccountRecoveryResponseBody errorResponse = new AccountRecoveryResponseBody(
                     "Error: " + exception.getMessage(),
-                    HttpStatus.NOT_FOUND.value()
+                    HttpStatus.INTERNAL_SERVER_ERROR.value()
             );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }

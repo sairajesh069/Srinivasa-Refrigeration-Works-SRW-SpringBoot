@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface UserCredentialRepository extends JpaRepository<UserCredential, String> {
 
-    @Query("SELECT uc FROM UserCredential uc WHERE uc.username = :identifier OR uc.email = :identifier OR uc.phoneNumber = :identifier")
+    @Query("SELECT uc FROM UserCredential uc WHERE uc.userId = :identifier OR uc.username = :identifier OR uc.email = :identifier OR uc.phoneNumber = :identifier")
     Optional<UserCredential> findByIdentifier(@Param("identifier") String identifier);
 
     @Query("SELECT uc FROM UserCredential uc WHERE uc.username = :loginId OR uc.email = :loginId")

@@ -61,6 +61,7 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/owner/profile", "/srw/owner/update-profile").hasRole("OWNER")
                         .requestMatchers("/srw/employee/profile", "/srw/employee/update-profile").hasRole("EMPLOYEE")
                         .requestMatchers("/srw/customer/profile", "/srw/customer/update-profile").hasRole("CUSTOMER")
+                        .requestMatchers("/srw/user/fetch-username", "/srw/user/change-password").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
                         .anyRequest().authenticated())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
