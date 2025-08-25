@@ -26,4 +26,14 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
     @Transactional
     @Query("UPDATE UserCredential uc SET uc.password = :password WHERE uc.username = :loginId OR uc.email = :loginId")
     void updatePassword(@Param("loginId") String loginId, @Param("password") String password);
+
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE UserCredential uc
+        SET uc.phoneNumber = CASE WHEN :phoneNumber IS NOT NULL THEN :phoneNumber ELSE uc.phoneNumber END,
+            uc.email = CASE WHEN :email IS NOT NULL THEN :email ELSE uc.email END
+        WHERE uc.userId = :userId
+    """)
+    void updateDetails(@Param("userId") String userId, @Param("phoneNumber") String phoneNumber, @Param("email") String email);
 }

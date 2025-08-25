@@ -11,8 +11,12 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -52,5 +56,29 @@ public class OwnerService {
             );
         }
         return ownerMapper.toDto(owner);
+    }
+
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "owners", allEntries = true),
+                    @CacheEvict(cacheNames = "owner", key = "'fetch-' + #ownerCredentialDTO.ownerDTO.ownerId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "owner", key = "'update-' + #ownerCredentialDTO.ownerDTO.ownerId")
+    )
+    public void updateOwner(OwnerCredentialDTO ownerCredentialDTO) {
+        OwnerDTO ownerDTO = ownerCredentialDTO.getOwnerDTO();
+        Owner owner = ownerMapper.toEntity(ownerDTO);
+        owner.setOwnerReference(ownerDTO.getOwnerId().replaceAll("\\D", "").trim());
+        owner.setOwnerId(ownerDTO.getOwnerId());
+        owner.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(owner.getPhoneNumber()));
+        owner.setUpdatedAt(LocalDateTime.now());
+        if(employeeRepository.findByIdentifier(owner.getNationalIdNumber()) != null) {
+            throw new UserValidationException("Duplicate national id number");
+        }
+        if(ownerCredentialDTO.getUserCredentialDTO().getUserId() != null) {
+            userCredentialService.updateDetails(ownerCredentialDTO.getUserCredentialDTO());
+        }
+        ownerRepository.save(owner);
     }
 }

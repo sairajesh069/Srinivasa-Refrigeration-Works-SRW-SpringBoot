@@ -13,9 +13,13 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -53,4 +57,24 @@ public class CustomerService {
         return customerMapper.toDto(customer);
     }
 
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "customers", allEntries = true),
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "customer", key = "'update-' + #customerCredentialDTO.customerDTO.customerId")
+    )
+    public void updateCustomer(CustomerCredentialDTO customerCredentialDTO) {
+        CustomerDTO customerDTO = customerCredentialDTO.getCustomerDTO();
+        Customer customer = customerMapper.toEntity(customerDTO);
+        customer.setCustomerReference(customerDTO.getCustomerId().replaceAll("\\D", "").trim());
+        customer.setCustomerId(customerDTO.getCustomerId());
+        customer.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(customer.getPhoneNumber()));
+        customer.setUpdatedAt(LocalDateTime.now());
+        if(customerCredentialDTO.getUserCredentialDTO().getUserId() != null) {
+            userCredentialService.updateDetails(customerCredentialDTO.getUserCredentialDTO());
+        }
+        customerRepository.save(customer);
+    }
 }

@@ -17,6 +17,7 @@ public class UserCredentialDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 31L;
 
+    private String userId;
     private String username;
     private String password;
     private String phoneNumber;

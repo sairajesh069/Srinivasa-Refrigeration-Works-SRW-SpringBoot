@@ -11,8 +11,12 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -52,5 +56,29 @@ public class EmployeeService {
             );
         }
         return employeeMapper.toDto(employee);
+    }
+
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "employees", allEntries = true),
+                    @CacheEvict(cacheNames = "employee", key = "'fetch-' + #employeeCredentialDTO.employeeDTO.employeeId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "employee", key = "'update-' + #employeeCredentialDTO.employeeDTO.employeeId")
+    )
+    public void updateEmployee(EmployeeCredentialDTO employeeCredentialDTO) {
+        EmployeeDTO employeeDTO = employeeCredentialDTO.getEmployeeDTO();
+        Employee employee = employeeMapper.toEntity(employeeDTO);
+        employee.setEmployeeReference(employeeDTO.getEmployeeId().replaceAll("\\D", "").trim());
+        employee.setEmployeeId(employeeDTO.getEmployeeId());
+        employee.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(employee.getPhoneNumber()));
+        employee.setUpdatedAt(LocalDateTime.now());
+        if(ownerRepository.findByIdentifier(employee.getNationalIdNumber()) != null) {
+            throw new UserValidationException("Duplicate national id number");
+        }
+        if(employeeCredentialDTO.getUserCredentialDTO().getUserId() != null) {
+            userCredentialService.updateDetails(employeeCredentialDTO.getUserCredentialDTO());
+        }
+        employeeRepository.save(employee);
     }
 }

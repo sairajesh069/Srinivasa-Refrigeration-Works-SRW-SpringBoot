@@ -2,7 +2,9 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
@@ -66,6 +68,35 @@ public class CustomerController {
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     customerDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<UserProfileUpdateResponseBody<CustomerDTO>> updateProfile(@RequestBody CustomerCredentialDTO customerCredentialDTO) {
+        try {
+            customerService.updateCustomer(customerCredentialDTO);
+            UserProfileUpdateResponseBody<CustomerDTO> successResponse = new UserProfileUpdateResponseBody<>(
+                    "Profile updated successfully.",
+                    HttpStatus.OK.value(),
+                    customerCredentialDTO.getCustomerDTO()
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch (DataIntegrityViolationException exception) {
+            UserProfileUpdateResponseBody<CustomerDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+                    DuplicateValueCheck.buildDuplicateValueErrorResponse("customers", exception),
+                    HttpStatus.CONFLICT.value(),
+                    customerCredentialDTO.getCustomerDTO()
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        }
+        catch(Exception exception) {
+            UserProfileUpdateResponseBody<CustomerDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    customerCredentialDTO.getCustomerDTO()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

@@ -3,6 +3,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
@@ -75,6 +76,43 @@ public class EmployeeController {
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     employeeDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<UserProfileUpdateResponseBody<EmployeeDTO>> updateProfile(@RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
+        try {
+            employeeService.updateEmployee(employeeCredentialDTO);
+            UserProfileUpdateResponseBody<EmployeeDTO> successResponse = new UserProfileUpdateResponseBody<>(
+                    "Profile updated successfully.",
+                    HttpStatus.OK.value(),
+                    employeeCredentialDTO.getEmployeeDTO()
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch (DataIntegrityViolationException exception) {
+            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+                    DuplicateValueCheck.buildDuplicateValueErrorResponse("employees", exception),
+                    HttpStatus.CONFLICT.value(),
+                    employeeCredentialDTO.getEmployeeDTO()
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        }
+        catch (UserValidationException exception) {
+            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.CONFLICT.value(),
+                    employeeCredentialDTO.getEmployeeDTO()
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        }
+        catch(Exception exception) {
+            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    employeeCredentialDTO.getEmployeeDTO()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

@@ -11,6 +11,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class UserCredentialService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void saveCredential(UserCredentialDTO userCredentialDTO, String userId, UserType userType) {
         UserCredential userCredential = userCredentialMapper.toEntity(userCredentialDTO);
         userCredential.setUserId(userId);
@@ -71,7 +73,15 @@ public class UserCredentialService {
                 accountRecoveryDTO.getLoginId(), PhoneNumberFormatter.formatPhoneNumber(accountRecoveryDTO.getPhoneNumber()));
     }
 
+    @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void updatePassword(AccountRecoveryDTO accountRecoveryDTO) {
         userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(), passwordEncoder.encode(accountRecoveryDTO.getPassword()));
+    }
+
+    @CacheEvict(cacheNames = "user-credential", allEntries = true)
+    public void updateDetails(UserCredentialDTO userCredentialDTO) {
+        userCredentialRepository.updateDetails(userCredentialDTO.getUserId(),
+                PhoneNumberFormatter.formatPhoneNumber(userCredentialDTO.getPhoneNumber()),
+                userCredentialDTO.getEmail());
     }
 }
