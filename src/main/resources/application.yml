@@ -13,19 +13,26 @@ spring:
     hibernate:
       ddl-auto: update  # Auto-update schema
     show-sql: false  # Disables logging of SQL queries
-    properties:
-      hibernate.dialect: org.hibernate.dialect.MySQLDialect  # MySQL dialect for Hibernate
     open-in-view: false  # Disable open-in-view to prevent lazy loading during view rendering
 
   cache:
     type: redis  # Redis as the cache provider
+
+  # Separate JPA and Redis repository configurations
+  data:
+    jpa:
+      repositories:
+        enabled: true
+    redis:
+      repositories:
+        enabled: false  # Disable Redis repositories since JPA entities are used
 
 ---
 # Development profile configuration
 spring:
   config:
     activate:
-      on-profile: dev  # Set profile to 'dev' for production environment
+      on-profile: dev  # Set profile to 'dev' for development environment
 
   datasource:
     url: ${DEV_DB_URL}  # Dynamic database URL for development
@@ -43,3 +50,11 @@ spring:
 jwt:
   secret: ${DEV_JWT_SECRET}
   expiration: ${DEV_JWT_EXPIRATION}
+
+frontend:
+  base-url: ${DEV_FRONTEND_BASE_URL}
+
+# Suppress Spring Security configuration warning
+logging:
+  level:
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
