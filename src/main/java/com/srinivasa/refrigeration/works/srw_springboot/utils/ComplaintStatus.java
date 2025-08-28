@@ -7,5 +7,5 @@ package com.srinivasa.refrigeration.works.srw_springboot.utils;
  * RESOLVED - Represents a complaint that has been resolved
  */
 public enum ComplaintStatus {
-    OPEN, IN_PROGRESS, RESOLVED;
+    PENDING, IN_PROGRESS, RESOLVED;
 }

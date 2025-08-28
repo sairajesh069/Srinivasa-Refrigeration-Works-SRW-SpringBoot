@@ -4,18 +4,19 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
-public class ComplaintResponseBody {
+public class ComplaintsFetchResponseBody {
 
-    public ComplaintResponseBody(String message, int status, ComplaintDTO complaintDTO) {
+    public ComplaintsFetchResponseBody(String message, int status, List<ComplaintDTO> complaintsDTO) {
         this.message = message;
         this.status = status;
-        this.complaintDTO = complaintDTO;
+        this.complaintsDTO = complaintsDTO;
     }
 
     private String message;
-    private ComplaintDTO complaintDTO;
+    private List<ComplaintDTO> complaintsDTO;
     private int status;
     private LocalDateTime timeStamp = LocalDateTime.now();
 }

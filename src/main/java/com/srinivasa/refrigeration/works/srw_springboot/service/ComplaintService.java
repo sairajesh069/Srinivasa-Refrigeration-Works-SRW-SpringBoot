@@ -11,7 +11,10 @@ import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,9 +30,18 @@ public class ComplaintService {
         complaint.setComplaintReference(UserIdGenerator.generateUniqueId(complaintDTO.getContactNumber()));
         complaint.setComplaintId("SRW" + complaint.getComplaintReference() + "COMP");
         complaint.setContactNumber(PhoneNumberFormatter.formatPhoneNumber(complaint.getContactNumber()));
-        complaint.setStatus(ComplaintStatus.OPEN);
-        complaint.setComplaintState(ComplaintState.ACTIVE);
+        complaint.setStatus(ComplaintStatus.PENDING);
+        complaint.setComplaintState(ComplaintState.SUBMITTED);
         complaintRepository.save(complaint);
         return complaintMapper.toDto(complaint);
+    }
+
+    @Cacheable(value = "complaints", key = "'my_complaint_list-' + #userId")
+    public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
+        return complaintRepository
+                .findByBookedById(userId)
+                .stream()
+                .map(complaintMapper::toDto)
+                .toList();
     }
 }
