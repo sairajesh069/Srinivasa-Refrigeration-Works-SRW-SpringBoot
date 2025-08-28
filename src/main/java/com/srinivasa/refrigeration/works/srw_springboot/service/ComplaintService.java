@@ -36,7 +36,7 @@ public class ComplaintService {
         return complaintMapper.toDto(complaint);
     }
 
-    @Cacheable(value = "complaints", key = "'my_complaint_list-' + #userId")
+    @Cacheable(value = "complaints", key = "'raised_by-' + #userId")
     public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
         return complaintRepository
                 .findByBookedById(userId)
@@ -49,6 +49,15 @@ public class ComplaintService {
     public List<ComplaintDTO> getComplaintList() {
         return complaintRepository
                 .findAll()
+                .stream()
+                .map(complaintMapper::toDto)
+                .toList();
+    }
+
+    @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId")
+    public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId) {
+        List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
+        return complaints
                 .stream()
                 .map(complaintMapper::toDto)
                 .toList();

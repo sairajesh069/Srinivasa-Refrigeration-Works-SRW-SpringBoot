@@ -10,4 +10,6 @@ import java.util.List;
 public interface ComplaintRepository extends JpaRepository<Complaint, String> {
 
     List<Complaint> findByBookedById(String userId);
+
+    List<Complaint> findByTechnicianDetailsEmployeeId(String employeeId);
 }

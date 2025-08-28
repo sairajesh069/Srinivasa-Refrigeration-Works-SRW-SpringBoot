@@ -49,7 +49,7 @@ public class ComplaintController {
         }
     }
 
-    @GetMapping("/raisedBy")
+    @GetMapping("/raised-by")
     public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId) {
         try {
             List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId);
@@ -78,6 +78,27 @@ public class ComplaintController {
                     "Fetched complaints successfully.",
                     HttpStatus.OK.value(),
                     allComplaints
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/assigned-to")
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId) {
+        try {
+            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId);
+            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
+                    "Fetched complaints assigned to " + employeeId + " successfully.",
+                    HttpStatus.OK.value(),
+                    assignedComplaints
             );
             return ResponseEntity.ok(successResponse);
         }
