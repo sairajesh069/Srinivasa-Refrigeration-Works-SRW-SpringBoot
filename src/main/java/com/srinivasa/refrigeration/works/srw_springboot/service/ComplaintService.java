@@ -44,4 +44,13 @@ public class ComplaintService {
                 .map(complaintMapper::toDto)
                 .toList();
     }
+
+    @Cacheable(value = "complaints", key = "'complaint_list'")
+    public List<ComplaintDTO> getComplaintList() {
+        return complaintRepository
+                .findAll()
+                .stream()
+                .map(complaintMapper::toDto)
+                .toList();
+    }
 }

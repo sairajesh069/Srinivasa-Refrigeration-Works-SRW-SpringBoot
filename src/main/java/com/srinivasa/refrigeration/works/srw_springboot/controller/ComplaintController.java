@@ -69,4 +69,25 @@ public class ComplaintController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    @GetMapping("/list")
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchAllComplaints() {
+        try {
+            List<ComplaintDTO> allComplaints = complaintService.getComplaintList();
+            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
+                    "Fetched complaints successfully.",
+                    HttpStatus.OK.value(),
+                    allComplaints
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }
