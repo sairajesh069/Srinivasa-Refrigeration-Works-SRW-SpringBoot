@@ -19,6 +19,7 @@ public interface ComplaintMapper {
     @Mapping(target = "complaintId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "reopenedAt", ignore = true)
     Complaint toEntity(ComplaintDTO complaintDTO);
 
     /*

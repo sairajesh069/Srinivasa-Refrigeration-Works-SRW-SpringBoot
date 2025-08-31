@@ -66,7 +66,7 @@ public class OwnerService {
             },
             put = @CachePut(value = "owner", key = "'update-' + #ownerCredentialDTO.ownerDTO.ownerId")
     )
-    public void updateOwner(OwnerCredentialDTO ownerCredentialDTO) {
+    public OwnerDTO updateOwner(OwnerCredentialDTO ownerCredentialDTO) {
         OwnerDTO ownerDTO = ownerCredentialDTO.getOwnerDTO();
         Owner owner = ownerMapper.toEntity(ownerDTO);
         owner.setOwnerReference(ownerDTO.getOwnerId().replaceAll("\\D", "").trim());
@@ -80,5 +80,8 @@ public class OwnerService {
             userCredentialService.updateDetails(ownerCredentialDTO.getUserCredentialDTO());
         }
         ownerRepository.save(owner);
+        OwnerDTO updatedOwnerDTO = ownerMapper.toDto(owner);
+        updatedOwnerDTO.setCreatedAt(ownerDTO.getCreatedAt());
+        return updatedOwnerDTO;
     }
 }

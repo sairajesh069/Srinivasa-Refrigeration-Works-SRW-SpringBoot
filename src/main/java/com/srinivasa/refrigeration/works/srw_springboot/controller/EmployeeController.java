@@ -2,6 +2,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.FetchUsersResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
@@ -13,6 +14,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/srw/employee")
@@ -65,7 +68,7 @@ public class EmployeeController {
         try {
             employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false);
             UserProfileResponseBody<EmployeeDTO> successResponse = new UserProfileResponseBody<>(
-                    "User profile fetched successfully.",
+                    "Employee: " + employeeId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),
                     employeeDTO
             );
@@ -84,11 +87,11 @@ public class EmployeeController {
     @PutMapping("/update-profile")
     public ResponseEntity<UserProfileUpdateResponseBody<EmployeeDTO>> updateProfile(@RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
         try {
-            employeeService.updateEmployee(employeeCredentialDTO);
+            EmployeeDTO updatedEmployeeDTO = employeeService.updateEmployee(employeeCredentialDTO);
             UserProfileUpdateResponseBody<EmployeeDTO> successResponse = new UserProfileUpdateResponseBody<>(
                     "Profile updated successfully.",
                     HttpStatus.OK.value(),
-                    employeeCredentialDTO.getEmployeeDTO()
+                    updatedEmployeeDTO
             );
             return ResponseEntity.ok(successResponse);
         }
@@ -113,6 +116,27 @@ public class EmployeeController {
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     employeeCredentialDTO.getEmployeeDTO()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/active-list")
+    public ResponseEntity<FetchUsersResponseBody<?>> getActiveEmployeeList(@RequestParam("context") String context) {
+        try {
+            List<?> activeEmployeesInfo = employeeService.getActiveEmployeeList(context);
+            FetchUsersResponseBody<?> successResponse = new FetchUsersResponseBody<>(
+                    "Active employee profiles fetched successfully.",
+                    HttpStatus.OK.value(),
+                    activeEmployeesInfo
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            FetchUsersResponseBody<EmployeeDTO> errorResponse = new FetchUsersResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

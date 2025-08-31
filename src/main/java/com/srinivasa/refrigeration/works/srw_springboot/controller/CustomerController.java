@@ -2,7 +2,6 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
@@ -57,7 +56,7 @@ public class CustomerController {
         try {
             customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false);
             UserProfileResponseBody<CustomerDTO> successResponse = new UserProfileResponseBody<>(
-                    "User profile fetched successfully.",
+                    "Customer: " + customerId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),
                     customerDTO
             );
@@ -76,11 +75,11 @@ public class CustomerController {
     @PutMapping("/update-profile")
     public ResponseEntity<UserProfileUpdateResponseBody<CustomerDTO>> updateProfile(@RequestBody CustomerCredentialDTO customerCredentialDTO) {
         try {
-            customerService.updateCustomer(customerCredentialDTO);
+            CustomerDTO updatedCustomerDTO = customerService.updateCustomer(customerCredentialDTO);
             UserProfileUpdateResponseBody<CustomerDTO> successResponse = new UserProfileUpdateResponseBody<>(
                     "Profile updated successfully.",
                     HttpStatus.OK.value(),
-                    customerCredentialDTO.getCustomerDTO()
+                    updatedCustomerDTO
             );
             return ResponseEntity.ok(successResponse);
         }

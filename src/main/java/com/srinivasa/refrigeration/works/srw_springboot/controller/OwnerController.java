@@ -65,7 +65,7 @@ public class OwnerController {
         try {
             ownerDTO = (OwnerDTO) ownerService.getOwnerByIdentifier(ownerId, false);
             UserProfileResponseBody<OwnerDTO> successResponse = new UserProfileResponseBody<>(
-                    "User profile fetched successfully.",
+                    "Owner: " + ownerId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),
                     ownerDTO
             );
@@ -84,11 +84,11 @@ public class OwnerController {
     @PutMapping("/update-profile")
     public ResponseEntity<UserProfileUpdateResponseBody<OwnerDTO>> updateProfile(@RequestBody OwnerCredentialDTO ownerCredentialDTO) {
         try {
-            ownerService.updateOwner(ownerCredentialDTO);
+            OwnerDTO updateOwnerDTO = ownerService.updateOwner(ownerCredentialDTO);
             UserProfileUpdateResponseBody<OwnerDTO> successResponse = new UserProfileUpdateResponseBody<>(
                     "Profile updated successfully.",
                     HttpStatus.OK.value(),
-                    ownerCredentialDTO.getOwnerDTO()
+                    updateOwnerDTO
             );
             return ResponseEntity.ok(successResponse);
         }

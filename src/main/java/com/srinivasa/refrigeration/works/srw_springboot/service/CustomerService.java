@@ -16,7 +16,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -65,7 +64,7 @@ public class CustomerService {
             },
             put = @CachePut(value = "customer", key = "'update-' + #customerCredentialDTO.customerDTO.customerId")
     )
-    public void updateCustomer(CustomerCredentialDTO customerCredentialDTO) {
+    public CustomerDTO updateCustomer(CustomerCredentialDTO customerCredentialDTO) {
         CustomerDTO customerDTO = customerCredentialDTO.getCustomerDTO();
         Customer customer = customerMapper.toEntity(customerDTO);
         customer.setCustomerReference(customerDTO.getCustomerId().replaceAll("\\D", "").trim());
@@ -76,5 +75,8 @@ public class CustomerService {
             userCredentialService.updateDetails(customerCredentialDTO.getUserCredentialDTO());
         }
         customerRepository.save(customer);
+        CustomerDTO updatedCustomerDTO = customerMapper.toDto(customer);
+        updatedCustomerDTO.setCreatedAt(customerDTO.getCreatedAt());
+        return updatedCustomerDTO;
     }
 }

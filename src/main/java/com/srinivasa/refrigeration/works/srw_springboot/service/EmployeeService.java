@@ -2,9 +2,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.service;
 
 import com.srinivasa.refrigeration.works.srw_springboot.entity.Employee;
 import com.srinivasa.refrigeration.works.srw_springboot.mapper.EmployeeMapper;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AuthenticatedUserDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.*;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.EmployeeRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.OwnerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
@@ -17,6 +15,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +65,7 @@ public class EmployeeService {
             },
             put = @CachePut(value = "employee", key = "'update-' + #employeeCredentialDTO.employeeDTO.employeeId")
     )
-    public void updateEmployee(EmployeeCredentialDTO employeeCredentialDTO) {
+    public EmployeeDTO updateEmployee(EmployeeCredentialDTO employeeCredentialDTO) {
         EmployeeDTO employeeDTO = employeeCredentialDTO.getEmployeeDTO();
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee.setEmployeeReference(employeeDTO.getEmployeeId().replaceAll("\\D", "").trim());
@@ -80,5 +79,33 @@ public class EmployeeService {
             userCredentialService.updateDetails(employeeCredentialDTO.getUserCredentialDTO());
         }
         employeeRepository.save(employee);
+        EmployeeDTO updatedEmployeeDTO = employeeMapper.toDto(employee);
+        updatedEmployeeDTO.setDateOfHire(employeeDTO.getDateOfHire());
+        return updatedEmployeeDTO;
+    }
+
+    @Cacheable(value = "employees", key = "'active_employees-' + #context")
+    public List<?> getActiveEmployeeList(String context) {
+        List<Employee> employees = employeeRepository.findByStatus(UserStatus.ACTIVE);
+        if(context.equals("update-complaint")) {
+            return employees
+                .stream()
+                .map(employee ->
+                        new TechnicianDetailsDTO(
+                                employee.getEmployeeId(),
+                                employee.getFirstName() + " " + employee.getLastName(),
+                                employee.getPhoneNumber(),
+                                employee.getDesignation()
+                        )
+                )
+                .toList();
+        }
+        else if(context.equals("all-employees")) {
+            return employees
+                    .stream()
+                    .map(employeeMapper::toDto)
+                    .toList();
+        }
+        return List.of();
     }
 }
