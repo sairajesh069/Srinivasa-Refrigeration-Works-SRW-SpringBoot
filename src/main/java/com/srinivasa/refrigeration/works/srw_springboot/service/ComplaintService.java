@@ -3,6 +3,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.service;
 import com.srinivasa.refrigeration.works.srw_springboot.entity.Complaint;
 import com.srinivasa.refrigeration.works.srw_springboot.mapper.ComplaintMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.ComplaintRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintStatus;
@@ -105,5 +106,26 @@ public class ComplaintService {
         ComplaintDTO updatedComplaintDTO = complaintMapper.toDto(complaint);
         updatedComplaintDTO.setCreatedAt(complaintDTO.getCreatedAt());
         return updatedComplaintDTO;
+    }
+
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "complaints", allEntries = true),
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId")
+            },
+            put = @CachePut(value = "complaint", key = "'User feedback-' + #complaintFeedbackDTO.complaintId")
+    )
+    public void saveUserFeedback(ComplaintFeedbackDTO complaintFeedbackDTO) {
+        complaintRepository.saveUserFeedback(complaintFeedbackDTO.getComplaintId(),
+                complaintFeedbackDTO.getCustomerFeedback(), LocalDateTime.now());
+    }
+
+    @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId")
+    public List<ComplaintDTO> getResolvedComplaints(String userId) {
+        return complaintRepository
+                .findByBookedByIdAndStatus(userId, ComplaintStatus.RESOLVED)
+                .stream()
+                .map(complaintMapper::toDto)
+                .toList();
     }
 }

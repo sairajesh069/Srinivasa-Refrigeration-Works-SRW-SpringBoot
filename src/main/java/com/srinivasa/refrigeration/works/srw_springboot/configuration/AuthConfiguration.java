@@ -55,7 +55,7 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/employee/profile", "/srw/employee/update-profile").hasAnyRole("OWNER", "EMPLOYEE")
                         .requestMatchers("/srw/customer/profile", "/srw/customer/update-profile").hasAnyRole("OWNER", "CUSTOMER")
                         .requestMatchers("/srw/user/fetch-username", "/srw/user/change-password").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
-                        .requestMatchers("/srw/complaint/register", "/srw/complaint/raised-by", "/srw/complaint/by-id", "/srw/complaint/update").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
+                        .requestMatchers("/srw/complaint/register", "/srw/complaint/raised-by", "/srw/complaint/by-id", "/srw/complaint/update", "/srw/complaint/resolved-list", "/srw/complaint/user-feedback").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
                         .requestMatchers("/srw/complaint/list", "/srw/employee/active-list").hasRole("OWNER")
                         .requestMatchers("/srw/complaint/assigned-to").hasAnyRole("EMPLOYEE", "OWNER")
                         .requestMatchers("/srw/owner/list", "/srw/employee/list", "/srw/customer/list").hasRole("OWNER")

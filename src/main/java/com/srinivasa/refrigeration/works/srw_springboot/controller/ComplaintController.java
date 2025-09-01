@@ -1,10 +1,8 @@
 package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.ComplaintFetchResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.ComplaintRegisterResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.ComplaintUpdateResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.ComplaintsFetchResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.*;
 import com.srinivasa.refrigeration.works.srw_springboot.service.ComplaintService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
 import lombok.RequiredArgsConstructor;
@@ -159,6 +157,48 @@ public class ComplaintController {
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     complaintDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/resolved-list")
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId) {
+        try {
+            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId);
+            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
+                    "Fetched list of resolved complaints successfully.",
+                    HttpStatus.OK.value(),
+                    resolvedComplaints
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/user-feedback")
+    public ResponseEntity<ComplaintFeedbackResponseBody> saveUserFeedback(@RequestBody ComplaintFeedbackDTO complaintFeedbackDTO) {
+        try {
+            complaintService.saveUserFeedback(complaintFeedbackDTO);
+            ComplaintFeedbackResponseBody successResponse = new ComplaintFeedbackResponseBody(
+                    "Complaint feedback saved successfully.",
+                    HttpStatus.OK.value(),
+                    complaintFeedbackDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            ComplaintFeedbackResponseBody errorResponse = new ComplaintFeedbackResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    complaintFeedbackDTO
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
