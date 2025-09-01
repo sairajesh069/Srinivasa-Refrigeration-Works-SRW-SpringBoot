@@ -5,6 +5,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.mapper.CustomerMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AuthenticatedUserDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.CustomerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
@@ -19,6 +20,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -78,5 +80,30 @@ public class CustomerService {
         CustomerDTO updatedCustomerDTO = customerMapper.toDto(customer);
         updatedCustomerDTO.setCreatedAt(customerDTO.getCreatedAt());
         return updatedCustomerDTO;
+    }
+
+    @Cacheable(value = "customers", key = "'customer_list'")
+    public List<CustomerDTO> getCustomerList() {
+        return customerRepository
+                .findAll()
+                .stream()
+                .map(customerMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "customers", allEntries = true),
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "customer", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
+    )
+    public void updateStatus(UpdateUserStatusDTO updateUserStatusDTO) {
+        String userId = updateUserStatusDTO.getUserId();
+        UserStatus status = updateUserStatusDTO.getUserStatus();
+        int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
+        customerRepository.updateStatusById(userId, status, LocalDateTime.now());
+        userCredentialService.updateUserStatus(userId, (byte) enabled);
     }
 }

@@ -102,4 +102,9 @@ public class UserCredentialService {
                 PhoneNumberFormatter.formatPhoneNumber(userCredentialDTO.getPhoneNumber()),
                 userCredentialDTO.getEmail());
     }
+
+    @CacheEvict(cacheNames = "user-credential", allEntries = true)
+    public void updateUserStatus(String userId, byte enabled) {
+        userCredentialRepository.updateUserStatusById(userId, enabled);
+    }
 }

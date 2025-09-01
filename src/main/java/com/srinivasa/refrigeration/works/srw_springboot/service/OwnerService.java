@@ -5,6 +5,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.mapper.OwnerMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AuthenticatedUserDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.EmployeeRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.OwnerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
@@ -17,6 +18,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -83,5 +85,30 @@ public class OwnerService {
         OwnerDTO updatedOwnerDTO = ownerMapper.toDto(owner);
         updatedOwnerDTO.setCreatedAt(ownerDTO.getCreatedAt());
         return updatedOwnerDTO;
+    }
+
+    @Cacheable(value = "owners", key = "'owner_list'")
+    public List<OwnerDTO> getOwnerList() {
+        return ownerRepository
+                .findAll()
+                .stream()
+                .map(ownerMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "owners", allEntries = true),
+                    @CacheEvict(cacheNames = "owner", key = "'fetch-' + #updateUserStatusDTO.userId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "owner", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
+    )
+    public void updateStatus(UpdateUserStatusDTO updateUserStatusDTO) {
+        String userId = updateUserStatusDTO.getUserId();
+        UserStatus status = updateUserStatusDTO.getUserStatus();
+        int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
+        ownerRepository.updateStatusById(userId, status, LocalDateTime.now());
+        userCredentialService.updateUserStatus(userId, (byte) enabled);
     }
 }

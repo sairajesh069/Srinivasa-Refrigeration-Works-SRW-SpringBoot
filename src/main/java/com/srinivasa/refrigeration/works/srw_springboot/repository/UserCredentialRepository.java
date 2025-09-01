@@ -36,4 +36,9 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
         WHERE uc.userId = :userId
     """)
     void updateDetails(@Param("userId") String userId, @Param("phoneNumber") String phoneNumber, @Param("email") String email);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserCredential SET enabled = :enabled WHERE userId = :userId")
+    void updateUserStatusById(@Param("userId") String userId, @Param("enabled") byte enabled);
 }

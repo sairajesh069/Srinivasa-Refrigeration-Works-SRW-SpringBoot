@@ -2,17 +2,22 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.FetchUsersResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/srw/owner")
@@ -113,6 +118,49 @@ public class OwnerController {
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     ownerCredentialDTO.getOwnerDTO()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<FetchUsersResponseBody<OwnerDTO>> fetchAllOwners() {
+        try {
+            List<OwnerDTO> ownersDTO = ownerService.getOwnerList();
+            FetchUsersResponseBody<OwnerDTO> successResponse = new FetchUsersResponseBody<>(
+                    "List of all owners fetched successfully.",
+                    HttpStatus.OK.value(),
+                    ownersDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            FetchUsersResponseBody<OwnerDTO> errorResponse = new FetchUsersResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update-status")
+    public ResponseEntity<UserProfileResponseBody<UpdateUserStatusDTO>> updateStatus(@RequestBody UpdateUserStatusDTO updateUserStatusDTO) {
+        try {
+            ownerService.updateStatus(updateUserStatusDTO);
+            UserProfileResponseBody<UpdateUserStatusDTO> successResponse = new UserProfileResponseBody<>(
+                    updateUserStatusDTO.getUserStatus().equals(UserStatus.ACTIVE) ? "Activated " : "Deactivated "
+                            + updateUserStatusDTO.getUserId() + " successfully.",
+                    HttpStatus.OK.value(),
+                    updateUserStatusDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            UserProfileResponseBody<UpdateUserStatusDTO> errorResponse = new UserProfileResponseBody<>(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    updateUserStatusDTO
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

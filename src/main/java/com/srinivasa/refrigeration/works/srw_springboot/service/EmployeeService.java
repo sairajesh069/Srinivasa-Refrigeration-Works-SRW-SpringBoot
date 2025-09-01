@@ -108,4 +108,29 @@ public class EmployeeService {
         }
         return List.of();
     }
+
+    @Cacheable(value = "employees", key = "'employee_list'")
+    public List<EmployeeDTO> getEmployeeList() {
+        return employeeRepository
+                .findAll()
+                .stream()
+                .map(employeeMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "employees", allEntries = true),
+                    @CacheEvict(cacheNames = "employee", key = "'fetch-' + #updateUserStatusDTO.userId + ', isAuthenticating-' + false")
+            },
+            put = @CachePut(value = "employee", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
+    )
+    public void updateStatus(UpdateUserStatusDTO updateUserStatusDTO) {
+        String userId = updateUserStatusDTO.getUserId();
+        UserStatus status = updateUserStatusDTO.getUserStatus();
+        int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
+        employeeRepository.updateStatusById(userId, status, LocalDateTime.now());
+        userCredentialService.updateUserStatus(userId, (byte) enabled);
+    }
 }
