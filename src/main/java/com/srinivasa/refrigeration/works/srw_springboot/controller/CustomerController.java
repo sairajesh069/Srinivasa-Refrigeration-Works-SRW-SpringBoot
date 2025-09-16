@@ -10,6 +10,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserReg
 import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -56,16 +57,24 @@ public class CustomerController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseBody<CustomerDTO>> fetchProfile(@RequestParam("customerId") String customerId) {
+    public ResponseEntity<UserProfileResponseBody<CustomerDTO>> fetchProfile(@RequestParam("customerId") String customerId, HttpServletRequest request) {
         CustomerDTO customerDTO = null;
         try {
-            customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false);
+            customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false, request);
             UserProfileResponseBody<CustomerDTO> successResponse = new UserProfileResponseBody<>(
                     "Customer: " + customerId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),
                     customerDTO
             );
             return ResponseEntity.ok(successResponse);
+        }
+        catch(SecurityException exception) {
+            UserProfileResponseBody<CustomerDTO> errorResponse = new UserProfileResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    customerDTO
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
         catch(Exception exception) {
             UserProfileResponseBody<CustomerDTO> errorResponse = new UserProfileResponseBody<>(

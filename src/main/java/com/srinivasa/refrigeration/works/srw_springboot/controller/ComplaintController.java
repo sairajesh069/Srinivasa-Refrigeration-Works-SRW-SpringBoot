@@ -5,6 +5,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFee
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.*;
 import com.srinivasa.refrigeration.works.srw_springboot.service.ComplaintService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -50,15 +51,23 @@ public class ComplaintController {
     }
 
     @GetMapping("/raised-by")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId, HttpServletRequest request) {
         try {
-            List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId);
+            List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId, request);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched complaints registered by " + userId + " successfully.",
                     HttpStatus.OK.value(),
                     myComplaints
             );
             return ResponseEntity.ok(successResponse);
+        }
+        catch(SecurityException exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
         catch(Exception exception) {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
@@ -92,15 +101,23 @@ public class ComplaintController {
     }
 
     @GetMapping("/assigned-to")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId, HttpServletRequest request) {
         try {
-            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId);
+            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId, request);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched complaints assigned to " + employeeId + " successfully.",
                     HttpStatus.OK.value(),
                     assignedComplaints
             );
             return ResponseEntity.ok(successResponse);
+        }
+        catch(SecurityException exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
         catch(Exception exception) {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
@@ -113,15 +130,23 @@ public class ComplaintController {
     }
 
     @GetMapping("/by-id")
-    public ResponseEntity<ComplaintFetchResponseBody> fetchComplaintById(@RequestParam("complaintId") String complaintId) {
+    public ResponseEntity<ComplaintFetchResponseBody> fetchComplaintById(@RequestParam("complaintId") String complaintId, HttpServletRequest request) {
         try {
-            ComplaintDTO complaint = complaintService.getComplaintById(complaintId);
+            ComplaintDTO complaint = complaintService.getComplaintById(complaintId, request);
             ComplaintFetchResponseBody successResponse = new ComplaintFetchResponseBody(
                     "Fetched complaint " + complaintId + " details successfully.",
                     HttpStatus.OK.value(),
                     complaint
             );
             return ResponseEntity.ok(successResponse);
+        }
+        catch(SecurityException exception) {
+            ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
         catch(Exception exception) {
             ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
@@ -163,15 +188,23 @@ public class ComplaintController {
     }
 
     @GetMapping("/resolved-list")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId, HttpServletRequest request) {
         try {
-            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId);
+            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId, request);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched list of resolved complaints successfully.",
                     HttpStatus.OK.value(),
                     resolvedComplaints
             );
             return ResponseEntity.ok(successResponse);
+        }
+        catch(SecurityException exception) {
+            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
         catch(Exception exception) {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(

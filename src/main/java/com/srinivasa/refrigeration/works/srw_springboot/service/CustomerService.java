@@ -7,10 +7,8 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerCred
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.CustomerRepository;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -29,6 +27,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final UserCredentialService userCredentialService;
+    private final AccessCheck accessCheck;
 
     @Transactional
     @CacheEvict(cacheNames = "customers", allEntries = true)
@@ -44,7 +43,7 @@ public class CustomerService {
     }
 
     @Cacheable(value = "customer", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
-    public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating) {
+    public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating, HttpServletRequest request) {
         Customer customer = customerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
         if(isAuthenticating) {
@@ -55,7 +54,13 @@ public class CustomerService {
                     "CUSTOMER"
             );
         }
-        return customerMapper.toDto(customer);
+        else {
+            if (accessCheck.canAccessProfile(customer.getCustomerId(), request)) {
+                return customerMapper.toDto(customer);
+            } else {
+                throw new SecurityException("Unauthorized access: Attempt to fetch restricted customer profile");
+            }
+        }
     }
 
     @Transactional

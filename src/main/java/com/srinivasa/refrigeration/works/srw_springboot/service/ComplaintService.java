@@ -5,10 +5,8 @@ import com.srinivasa.refrigeration.works.srw_springboot.mapper.ComplaintMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.ComplaintRepository;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintStatus;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserIdGenerator;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,6 +24,7 @@ public class ComplaintService {
 
     private final ComplaintMapper complaintMapper;
     private final ComplaintRepository complaintRepository;
+    private final AccessCheck accessCheck;
 
     @Transactional
     @CacheEvict(cacheNames = "complaints", allEntries = true)
@@ -41,12 +40,17 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'raised_by-' + #userId")
-    public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
-        return complaintRepository
-                .findByBookedById(userId)
-                .stream()
-                .map(complaintMapper::toDto)
-                .toList();
+    public List<ComplaintDTO> getComplaintsRaisedBy(String userId, HttpServletRequest request) {
+        if(accessCheck.canAccessComplaints(userId, request)) {
+            return complaintRepository
+                    .findByBookedById(userId)
+                    .stream()
+                    .map(complaintMapper::toDto)
+                    .toList();
+        }
+        else {
+            throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
+        }
     }
 
     @Cacheable(value = "complaints", key = "'complaint_list'")
@@ -59,17 +63,29 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId")
-    public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId) {
-        List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
-        return complaints
-                .stream()
-                .map(complaintMapper::toDto)
-                .toList();
+    public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId, HttpServletRequest request) {
+        if(accessCheck.canAccessComplaints(employeeId, request)) {
+            List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
+            return complaints
+                    .stream()
+                    .map(complaintMapper::toDto)
+                    .toList();
+        }
+        else {
+            throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
+        }
     }
 
     @Cacheable(value = "complaint", key = "'complaint-' + #complaintId")
-    public ComplaintDTO getComplaintById(String complaintId) {
-        return complaintMapper.toDto(complaintRepository.findByComplaintId(complaintId));
+    public ComplaintDTO getComplaintById(String complaintId, HttpServletRequest request) {
+        Complaint complaint = complaintRepository.findByComplaintId(complaintId);
+        String assignedToId = complaint.getTechnicianDetails() != null ? complaint.getTechnicianDetails().getEmployeeId() : "";
+        if(accessCheck.canAccessComplaint(complaint.getBookedById(), assignedToId, request)) {
+            return complaintMapper.toDto(complaint);
+        }
+        else {
+            throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaint");
+        }
     }
 
     @Caching(
@@ -121,11 +137,16 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId")
-    public List<ComplaintDTO> getResolvedComplaints(String userId) {
-        return complaintRepository
-                .findByBookedByIdAndStatus(userId, ComplaintStatus.RESOLVED)
-                .stream()
-                .map(complaintMapper::toDto)
-                .toList();
+    public List<ComplaintDTO> getResolvedComplaints(String userId, HttpServletRequest request) {
+        if(accessCheck.canAccessComplaints(userId, request)) {
+            return complaintRepository
+                    .findByBookedByIdAndStatus(userId, ComplaintStatus.RESOLVED)
+                    .stream()
+                    .map(complaintMapper::toDto)
+                    .toList();
+        }
+        else {
+            throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
+        }
     }
 }

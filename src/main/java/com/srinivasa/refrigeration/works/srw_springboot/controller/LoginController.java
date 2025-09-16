@@ -11,6 +11,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.service.UserCredentialSe
 import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class LoginController {
     private Long jwtExpiration;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseBody> login(@RequestBody CredentialsDTO credentials) {
+    public ResponseEntity<LoginResponseBody> login(@RequestBody CredentialsDTO credentials, HttpServletRequest request) {
         try {
             Map<String, String> userAuthDetails = userCredentialService.userValidationAndGetUserId(credentials);
             String userId = userAuthDetails.get("userId");
@@ -49,13 +50,13 @@ public class LoginController {
             );
             AuthenticatedUserDTO authenticatedUserDTO = null;
             if(userType.equals("CUSTOMER")) {
-                authenticatedUserDTO = (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true);
+                authenticatedUserDTO = (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true, request);
             }
             else if(userType.equals("OWNER")) {
                 authenticatedUserDTO = (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
             }
             else if(userType.equals("EMPLOYEE")) {
-                authenticatedUserDTO = (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true);
+                authenticatedUserDTO = (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true, request);
             }
             LoginResponseBody successResponse = new LoginResponseBody(
                     "Login success",
