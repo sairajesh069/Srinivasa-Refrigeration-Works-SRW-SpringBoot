@@ -2,6 +2,7 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateComplaintStateDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.*;
 import com.srinivasa.refrigeration.works.srw_springboot.service.ComplaintService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
@@ -159,10 +160,10 @@ public class ComplaintController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ComplaintUpdateResponseBody> updateComplaint(@RequestBody ComplaintDTO complaintDTO) {
+    public ResponseEntity<ComplaintUpdateResponseBody<ComplaintDTO>> updateComplaint(@RequestBody ComplaintDTO complaintDTO) {
         try {
             ComplaintDTO updatedComplaint = complaintService.updateComplaint(complaintDTO);
-            ComplaintUpdateResponseBody successResponse = new ComplaintUpdateResponseBody(
+            ComplaintUpdateResponseBody<ComplaintDTO> successResponse = new ComplaintUpdateResponseBody<>(
                     "Complaint updated successfully.",
                     HttpStatus.OK.value(),
                     updatedComplaint
@@ -170,7 +171,7 @@ public class ComplaintController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            ComplaintUpdateResponseBody errorResponse = new ComplaintUpdateResponseBody(
+            ComplaintUpdateResponseBody<ComplaintDTO> errorResponse = new ComplaintUpdateResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("complaints", exception),
                     HttpStatus.CONFLICT.value(),
                     complaintDTO
@@ -178,7 +179,7 @@ public class ComplaintController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
         catch(Exception exception) {
-            ComplaintUpdateResponseBody errorResponse = new ComplaintUpdateResponseBody(
+            ComplaintUpdateResponseBody<ComplaintDTO> errorResponse = new ComplaintUpdateResponseBody<>(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     complaintDTO
@@ -232,6 +233,27 @@ public class ComplaintController {
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     complaintFeedbackDTO
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update-state")
+    public ResponseEntity<ComplaintUpdateResponseBody<UpdateComplaintStateDTO>> updateComplaintState(@RequestBody UpdateComplaintStateDTO updateComplaintStateDTO, HttpServletRequest request) {
+        try {
+            complaintService.updateState(updateComplaintStateDTO, request);
+            ComplaintUpdateResponseBody<UpdateComplaintStateDTO> successResponse = new ComplaintUpdateResponseBody<>(
+                    "Complaint state updated successfully.",
+                    HttpStatus.OK.value(),
+                    updateComplaintStateDTO
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch (Exception exception) {
+            ComplaintUpdateResponseBody<UpdateComplaintStateDTO> errorResponse = new ComplaintUpdateResponseBody<>(
+                    "Error: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    updateComplaintStateDTO
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

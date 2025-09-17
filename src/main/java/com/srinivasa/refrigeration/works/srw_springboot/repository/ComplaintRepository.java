@@ -1,6 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.repository;
 
 import com.srinivasa.refrigeration.works.srw_springboot.entity.Complaint;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +29,17 @@ public interface ComplaintRepository extends JpaRepository<Complaint, String> {
     @Query("UPDATE Complaint SET updatedAt = :updatedAt, customerFeedback = :customerFeedback WHERE complaintId = :complaintId")
     void saveUserFeedback(@Param("complaintId") String complaintId, @Param("customerFeedback") String customerFeedback, @Param("updatedAt") LocalDateTime updatedAt);
 
+    @Modifying
+    @Transactional
+    @Query("""
+    UPDATE Complaint c 
+       SET c.complaintState = :complaintState,
+           c.updatedAt = :timestamp,
+           c.closedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState.CLOSED 
+                             THEN :timestamp ELSE c.closedAt END,
+           c.reopenedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState.REOPENED 
+                               THEN :timestamp ELSE c.reopenedAt END
+     WHERE c.complaintId = :complaintId
+""")
+    void updateState(@Param("complaintId") String complaintId, @Param("complaintState") ComplaintState complaintState, @Param("timestamp") LocalDateTime timestamp);
 }

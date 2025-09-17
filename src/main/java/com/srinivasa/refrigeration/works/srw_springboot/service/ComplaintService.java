@@ -4,6 +4,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.entity.Complaint;
 import com.srinivasa.refrigeration.works.srw_springboot.mapper.ComplaintMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateComplaintStateDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.ComplaintRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -129,7 +130,7 @@ public class ComplaintService {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
                     @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId")
             },
-            put = @CachePut(value = "complaint", key = "'User feedback-' + #complaintFeedbackDTO.complaintId")
+            put = @CachePut(value = "complaint", key = "'user_feedback-' + #complaintFeedbackDTO.complaintId")
     )
     public void saveUserFeedback(ComplaintFeedbackDTO complaintFeedbackDTO) {
         complaintRepository.saveUserFeedback(complaintFeedbackDTO.getComplaintId(),
@@ -147,6 +148,23 @@ public class ComplaintService {
         }
         else {
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
+        }
+    }
+
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = "complaints", allEntries = true),
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #updateComplaintStateDTO.complaintId")
+            },
+            put = @CachePut(value = "complaint", key = "'update_state-' + #updateComplaintStateDTO.complaintId")
+    )
+    public void updateState(UpdateComplaintStateDTO updateComplaintStateDTO, HttpServletRequest request) {
+        if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo(), request)) {
+            complaintRepository.updateState(updateComplaintStateDTO.getComplaintId(),
+                    updateComplaintStateDTO.getComplaintState(), LocalDateTime.now());
+        }
+        else {
+            throw new SecurityException("Unauthorized access: Attempt to update restricted complaint state");
         }
     }
 }

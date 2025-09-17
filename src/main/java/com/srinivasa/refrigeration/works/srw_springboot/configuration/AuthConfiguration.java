@@ -60,6 +60,7 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/complaint/assigned-to").hasAnyRole("EMPLOYEE", "OWNER")
                         .requestMatchers("/srw/owner/list", "/srw/employee/list", "/srw/customer/list").hasRole("OWNER")
                         .requestMatchers("/srw/owner/update-status", "/srw/employee/update-status", "/srw/customer/update-status").hasRole("OWNER")
+                        .requestMatchers("/srw/complaint/update-state").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
                         .anyRequest().authenticated())
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

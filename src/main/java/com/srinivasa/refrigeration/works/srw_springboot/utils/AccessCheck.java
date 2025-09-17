@@ -41,4 +41,10 @@ public class AccessCheck {
                 || bookedById.equals(userDetails.get("UserId"))
                 || (assignedToId != null && assignedToId.equals(userDetails.get("UserId")));
     }
+
+    public boolean canAccessUpdateComplaintState(String assignedToId, HttpServletRequest request) {
+        Map<String, String> userDetails = extractUserIdAndType(request);
+        return userDetails.get("UserType").equals("OWNER")
+                || (userDetails.get("UserType").equals("EMPLOYEE") && assignedToId != null && assignedToId.equals(userDetails.get("UserId")));
+    }
 }
