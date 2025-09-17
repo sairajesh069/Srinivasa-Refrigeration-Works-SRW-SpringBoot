@@ -39,7 +39,7 @@ public class ComplaintService {
         return complaintMapper.toDto(complaint);
     }
 
-    @Cacheable(value = "complaints", key = "'raised_by-' + #userId")
+    @Cacheable(value = "complaints", key = "'raised_by-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
         if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
@@ -62,7 +62,7 @@ public class ComplaintService {
                 .toList();
     }
 
-    @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId")
+    @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId) {
         if(accessCheck.canAccessComplaints(employeeId)) {
             List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
@@ -76,7 +76,7 @@ public class ComplaintService {
         }
     }
 
-    @Cacheable(value = "complaint", key = "'complaint-' + #complaintId")
+    @Cacheable(value = "complaint", key = "'complaint-' + #complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public ComplaintDTO getComplaintById(String complaintId) {
         Complaint complaint = complaintRepository.findByComplaintId(complaintId);
         String assignedToId = complaint.getTechnicianDetails() != null ? complaint.getTechnicianDetails().getEmployeeId() : "";
@@ -91,7 +91,7 @@ public class ComplaintService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintDTO.complaintId")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "complaint", key = "'update-' + #complaintDTO.complaintId")
     )
@@ -127,7 +127,7 @@ public class ComplaintService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "complaint", key = "'user_feedback-' + #complaintFeedbackDTO.complaintId")
     )
@@ -136,7 +136,7 @@ public class ComplaintService {
                 complaintFeedbackDTO.getCustomerFeedback(), LocalDateTime.now());
     }
 
-    @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId")
+    @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getResolvedComplaints(String userId) {
         if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
@@ -153,7 +153,7 @@ public class ComplaintService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #updateComplaintStateDTO.complaintId")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #updateComplaintStateDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "complaint", key = "'update_state-' + #updateComplaintStateDTO.complaintId")
     )

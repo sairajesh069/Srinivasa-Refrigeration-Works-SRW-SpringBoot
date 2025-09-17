@@ -41,7 +41,7 @@ public class CustomerService {
         return customerMapper.toDto(customer);
     }
 
-    @Cacheable(value = "customer", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
+    @Cacheable(value = "customer", key = "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating) {
         Customer customer = customerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
@@ -66,7 +66,7 @@ public class CustomerService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "customers", allEntries = true),
-                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + ', isAuthenticating-' + false")
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "customer", key = "'update-' + #customerCredentialDTO.customerDTO.customerId")
     )
@@ -99,7 +99,7 @@ public class CustomerService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "customers", allEntries = true),
-                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + ', isAuthenticating-' + false")
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "customer", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
     )
