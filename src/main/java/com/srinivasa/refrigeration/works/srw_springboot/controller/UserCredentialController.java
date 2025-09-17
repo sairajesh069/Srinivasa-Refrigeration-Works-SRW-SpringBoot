@@ -33,7 +33,7 @@ public class UserCredentialController {
         catch (UserValidationException exception) {
             UserAuthDataUpdateResponseBody errorResponse = new UserAuthDataUpdateResponseBody(
                     exception.getMessage(),
-                    null,
+                    "",
                     HttpStatus.NOT_FOUND.value()
             );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -41,7 +41,7 @@ public class UserCredentialController {
         catch (Exception exception) {
             UserAuthDataUpdateResponseBody errorResponse = new UserAuthDataUpdateResponseBody(
                     "Error: " + exception.getMessage(),
-                    null,
+                    "",
                     HttpStatus.INTERNAL_SERVER_ERROR.value()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

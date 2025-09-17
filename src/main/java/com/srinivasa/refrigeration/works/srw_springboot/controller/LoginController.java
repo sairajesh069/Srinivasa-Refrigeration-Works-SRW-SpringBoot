@@ -48,16 +48,15 @@ public class LoginController {
                     userId,
                     UserType.valueOf(userType)
             );
-            AuthenticatedUserDTO authenticatedUserDTO = null;
-            if(userType.equals("CUSTOMER")) {
-                authenticatedUserDTO = (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true, request);
-            }
-            else if(userType.equals("OWNER")) {
-                authenticatedUserDTO = (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
-            }
-            else if(userType.equals("EMPLOYEE")) {
-                authenticatedUserDTO = (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true, request);
-            }
+            AuthenticatedUserDTO authenticatedUserDTO = switch (userType) {
+                case "CUSTOMER" ->
+                        (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true, request);
+                case "OWNER" ->
+                        (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
+                case "EMPLOYEE" ->
+                        (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true, request);
+                default -> null;
+            };
             LoginResponseBody successResponse = new LoginResponseBody(
                     "Login success",
                     HttpStatus.OK.value(),
@@ -71,8 +70,8 @@ public class LoginController {
             LoginResponseBody errorResponse = new LoginResponseBody(
                     exception.getMessage(),
                     HttpStatus.UNAUTHORIZED.value(),
-                    null,
-                    null,
+                    "",
+                    new AuthenticatedUserDTO(),
                     0L
             );
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
@@ -81,8 +80,8 @@ public class LoginController {
             LoginResponseBody errorResponse = new LoginResponseBody(
                     "Login failed " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null,
-                    null,
+                    "",
+                    new AuthenticatedUserDTO(),
                     0L
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -58,7 +59,7 @@ public class CustomerController {
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponseBody<CustomerDTO>> fetchProfile(@RequestParam("customerId") String customerId, HttpServletRequest request) {
-        CustomerDTO customerDTO = null;
+        CustomerDTO customerDTO = new CustomerDTO();
         try {
             customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false, request);
             UserProfileResponseBody<CustomerDTO> successResponse = new UserProfileResponseBody<>(
@@ -130,7 +131,7 @@ public class CustomerController {
             FetchUsersResponseBody<CustomerDTO> errorResponse = new FetchUsersResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

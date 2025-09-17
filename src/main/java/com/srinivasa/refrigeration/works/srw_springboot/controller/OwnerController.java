@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -66,7 +67,7 @@ public class OwnerController {
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponseBody<OwnerDTO>> fetchProfile(@RequestParam("ownerId") String ownerId) {
-        OwnerDTO ownerDTO = null;
+        OwnerDTO ownerDTO = new OwnerDTO();
         try {
             ownerDTO = (OwnerDTO) ownerService.getOwnerByIdentifier(ownerId, false);
             UserProfileResponseBody<OwnerDTO> successResponse = new UserProfileResponseBody<>(
@@ -138,7 +139,7 @@ public class OwnerController {
             FetchUsersResponseBody<OwnerDTO> errorResponse = new FetchUsersResponseBody<>(
                     exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -66,7 +67,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.FORBIDDEN.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
@@ -74,7 +75,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
@@ -95,7 +96,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
@@ -116,7 +117,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.FORBIDDEN.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
@@ -124,7 +125,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
@@ -145,7 +146,7 @@ public class ComplaintController {
             ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.FORBIDDEN.value(),
-                    null
+                    new ComplaintDTO()
             );
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
@@ -153,7 +154,7 @@ public class ComplaintController {
             ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    new ComplaintDTO()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
@@ -203,7 +204,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.FORBIDDEN.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         }
@@ -211,7 +212,7 @@ public class ComplaintController {
             ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
                     "Error: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    null
+                    Collections.emptyList()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
