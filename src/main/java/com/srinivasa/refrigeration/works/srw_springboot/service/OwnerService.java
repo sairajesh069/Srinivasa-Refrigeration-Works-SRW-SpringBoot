@@ -45,7 +45,10 @@ public class OwnerService {
         return ownerMapper.toDto(owner);
     }
 
-    @Cacheable(value = "owner", key = "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "owner",
+            key = "#isAuthenticating ? " +
+                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating : " +
+                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public Object getOwnerByIdentifier(String identifier, boolean isAuthenticating) {
         Owner owner = ownerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
@@ -64,6 +67,7 @@ public class OwnerService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "owners", allEntries = true),
+                    @CacheEvict(cacheNames = "owner", key = "'fetch-' + #ownerCredentialDTO.ownerDTO.ownerId + '-isAuthenticating-' + true"),
                     @CacheEvict(cacheNames = "owner", key = "'fetch-' + #ownerCredentialDTO.ownerDTO.ownerId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "owner", key = "'update-' + #ownerCredentialDTO.ownerDTO.ownerId")
@@ -100,6 +104,7 @@ public class OwnerService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "owners", allEntries = true),
+                    @CacheEvict(cacheNames = "owner", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + true"),
                     @CacheEvict(cacheNames = "owner", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "owner", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")

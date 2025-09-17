@@ -43,7 +43,10 @@ public class EmployeeService {
         return employeeMapper.toDto(employee);
     }
 
-    @Cacheable(value = "employee", key = "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "employee",
+            key = "#isAuthenticating ? " +
+                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating : " +
+                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
     public Object getEmployeeByIdentifier(String identifier, boolean isAuthenticating) {
         Employee employee = employeeRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
@@ -68,6 +71,7 @@ public class EmployeeService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "employees", allEntries = true),
+                    @CacheEvict(cacheNames = "employee", key = "'fetch-' + #employeeCredentialDTO.employeeDTO.employeeId + '-isAuthenticating-' + true"),
                     @CacheEvict(cacheNames = "employee", key = "'fetch-' + #employeeCredentialDTO.employeeDTO.employeeId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "employee", key = "'update-' + #employeeCredentialDTO.employeeDTO.employeeId")
@@ -129,6 +133,7 @@ public class EmployeeService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "employees", allEntries = true),
+                    @CacheEvict(cacheNames = "employee", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + true"),
                     @CacheEvict(cacheNames = "employee", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "employee", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
