@@ -38,7 +38,7 @@ public class AuthConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthEntryPoint authEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -62,6 +62,10 @@ public class AuthConfiguration {
                         .requestMatchers("/srw/owner/update-status", "/srw/employee/update-status", "/srw/customer/update-status").hasRole("OWNER")
                         .requestMatchers("/srw/complaint/update-state").hasAnyRole("CUSTOMER", "EMPLOYEE", "OWNER")
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
