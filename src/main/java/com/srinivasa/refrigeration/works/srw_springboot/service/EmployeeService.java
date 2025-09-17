@@ -6,7 +6,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.*;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.EmployeeRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.OwnerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -45,7 +44,7 @@ public class EmployeeService {
     }
 
     @Cacheable(value = "employee", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
-    public Object getEmployeeByIdentifier(String identifier, boolean isAuthenticating, HttpServletRequest request) {
+    public Object getEmployeeByIdentifier(String identifier, boolean isAuthenticating) {
         Employee employee = employeeRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
         if(isAuthenticating) {
@@ -57,7 +56,7 @@ public class EmployeeService {
             );
         }
         else {
-            if (accessCheck.canAccessProfile(employee.getEmployeeId(), request)) {
+            if (accessCheck.canAccessProfile(employee.getEmployeeId())) {
                 return employeeMapper.toDto(employee);
             } else {
                 throw new SecurityException("Unauthorized access: Attempt to fetch restricted employee profile");

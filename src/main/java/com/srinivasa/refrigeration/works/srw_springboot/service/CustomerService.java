@@ -8,7 +8,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.CustomerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,7 +42,7 @@ public class CustomerService {
     }
 
     @Cacheable(value = "customer", key = "'fetch-' + #identifier + ', isAuthenticating-' + #isAuthenticating")
-    public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating, HttpServletRequest request) {
+    public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating) {
         Customer customer = customerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
         if(isAuthenticating) {
@@ -55,7 +54,7 @@ public class CustomerService {
             );
         }
         else {
-            if (accessCheck.canAccessProfile(customer.getCustomerId(), request)) {
+            if (accessCheck.canAccessProfile(customer.getCustomerId())) {
                 return customerMapper.toDto(customer);
             } else {
                 throw new SecurityException("Unauthorized access: Attempt to fetch restricted customer profile");

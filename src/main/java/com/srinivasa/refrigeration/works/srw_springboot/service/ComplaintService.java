@@ -7,7 +7,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFee
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateComplaintStateDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.ComplaintRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -41,8 +40,8 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'raised_by-' + #userId")
-    public List<ComplaintDTO> getComplaintsRaisedBy(String userId, HttpServletRequest request) {
-        if(accessCheck.canAccessComplaints(userId, request)) {
+    public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
+        if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
                     .findByBookedById(userId)
                     .stream()
@@ -64,8 +63,8 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId")
-    public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId, HttpServletRequest request) {
-        if(accessCheck.canAccessComplaints(employeeId, request)) {
+    public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId) {
+        if(accessCheck.canAccessComplaints(employeeId)) {
             List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
             return complaints
                     .stream()
@@ -78,10 +77,10 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaint", key = "'complaint-' + #complaintId")
-    public ComplaintDTO getComplaintById(String complaintId, HttpServletRequest request) {
+    public ComplaintDTO getComplaintById(String complaintId) {
         Complaint complaint = complaintRepository.findByComplaintId(complaintId);
         String assignedToId = complaint.getTechnicianDetails() != null ? complaint.getTechnicianDetails().getEmployeeId() : "";
-        if(accessCheck.canAccessComplaint(complaint.getBookedById(), assignedToId, request)) {
+        if(accessCheck.canAccessComplaint(complaint.getBookedById(), assignedToId)) {
             return complaintMapper.toDto(complaint);
         }
         else {
@@ -138,8 +137,8 @@ public class ComplaintService {
     }
 
     @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId")
-    public List<ComplaintDTO> getResolvedComplaints(String userId, HttpServletRequest request) {
-        if(accessCheck.canAccessComplaints(userId, request)) {
+    public List<ComplaintDTO> getResolvedComplaints(String userId) {
+        if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
                     .findByBookedByIdAndStatus(userId, ComplaintStatus.RESOLVED)
                     .stream()
@@ -158,8 +157,8 @@ public class ComplaintService {
             },
             put = @CachePut(value = "complaint", key = "'update_state-' + #updateComplaintStateDTO.complaintId")
     )
-    public void updateState(UpdateComplaintStateDTO updateComplaintStateDTO, HttpServletRequest request) {
-        if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo(), request)) {
+    public void updateState(UpdateComplaintStateDTO updateComplaintStateDTO) {
+        if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo())) {
             complaintRepository.updateState(updateComplaintStateDTO.getComplaintId(),
                     updateComplaintStateDTO.getComplaintState(), LocalDateTime.now());
         }

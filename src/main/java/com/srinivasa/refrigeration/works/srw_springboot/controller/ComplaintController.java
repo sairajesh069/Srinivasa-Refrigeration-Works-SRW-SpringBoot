@@ -6,7 +6,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateCompla
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.*;
 import com.srinivasa.refrigeration.works.srw_springboot.service.ComplaintService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -53,9 +52,9 @@ public class ComplaintController {
     }
 
     @GetMapping("/raised-by")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId, HttpServletRequest request) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId) {
         try {
-            List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId, request);
+            List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched complaints registered by " + userId + " successfully.",
                     HttpStatus.OK.value(),
@@ -103,9 +102,9 @@ public class ComplaintController {
     }
 
     @GetMapping("/assigned-to")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId, HttpServletRequest request) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId) {
         try {
-            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId, request);
+            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched complaints assigned to " + employeeId + " successfully.",
                     HttpStatus.OK.value(),
@@ -132,9 +131,9 @@ public class ComplaintController {
     }
 
     @GetMapping("/by-id")
-    public ResponseEntity<ComplaintFetchResponseBody> fetchComplaintById(@RequestParam("complaintId") String complaintId, HttpServletRequest request) {
+    public ResponseEntity<ComplaintFetchResponseBody> fetchComplaintById(@RequestParam("complaintId") String complaintId) {
         try {
-            ComplaintDTO complaint = complaintService.getComplaintById(complaintId, request);
+            ComplaintDTO complaint = complaintService.getComplaintById(complaintId);
             ComplaintFetchResponseBody successResponse = new ComplaintFetchResponseBody(
                     "Fetched complaint " + complaintId + " details successfully.",
                     HttpStatus.OK.value(),
@@ -190,9 +189,9 @@ public class ComplaintController {
     }
 
     @GetMapping("/resolved-list")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId, HttpServletRequest request) {
+    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId) {
         try {
-            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId, request);
+            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId);
             ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
                     "Fetched list of resolved complaints successfully.",
                     HttpStatus.OK.value(),
@@ -240,9 +239,9 @@ public class ComplaintController {
     }
 
     @PutMapping("/update-state")
-    public ResponseEntity<ComplaintUpdateResponseBody<UpdateComplaintStateDTO>> updateComplaintState(@RequestBody UpdateComplaintStateDTO updateComplaintStateDTO, HttpServletRequest request) {
+    public ResponseEntity<ComplaintUpdateResponseBody<UpdateComplaintStateDTO>> updateComplaintState(@RequestBody UpdateComplaintStateDTO updateComplaintStateDTO) {
         try {
-            complaintService.updateState(updateComplaintStateDTO, request);
+            complaintService.updateState(updateComplaintStateDTO);
             ComplaintUpdateResponseBody<UpdateComplaintStateDTO> successResponse = new ComplaintUpdateResponseBody<>(
                     "Complaint state updated successfully.",
                     HttpStatus.OK.value(),

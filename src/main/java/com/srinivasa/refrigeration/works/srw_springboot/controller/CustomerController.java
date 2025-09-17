@@ -10,7 +10,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserReg
 import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -58,10 +57,10 @@ public class CustomerController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseBody<CustomerDTO>> fetchProfile(@RequestParam("customerId") String customerId, HttpServletRequest request) {
+    public ResponseEntity<UserProfileResponseBody<CustomerDTO>> fetchProfile(@RequestParam("customerId") String customerId) {
         CustomerDTO customerDTO = new CustomerDTO();
         try {
-            customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false, request);
+            customerDTO = (CustomerDTO) customerService.getCustomerByIdentifier(customerId, false);
             UserProfileResponseBody<CustomerDTO> successResponse = new UserProfileResponseBody<>(
                     "Customer: " + customerId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),

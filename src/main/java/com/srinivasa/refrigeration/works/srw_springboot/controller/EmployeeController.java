@@ -11,7 +11,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -67,10 +66,10 @@ public class EmployeeController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseBody<EmployeeDTO>> fetchProfile(@RequestParam("employeeId") String employeeId, HttpServletRequest request) {
+    public ResponseEntity<UserProfileResponseBody<EmployeeDTO>> fetchProfile(@RequestParam("employeeId") String employeeId) {
         EmployeeDTO employeeDTO = new EmployeeDTO();
         try {
-            employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false, request);
+            employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false);
             UserProfileResponseBody<EmployeeDTO> successResponse = new UserProfileResponseBody<>(
                     "Employee: " + employeeId +  " profile fetched successfully.",
                     HttpStatus.OK.value(),

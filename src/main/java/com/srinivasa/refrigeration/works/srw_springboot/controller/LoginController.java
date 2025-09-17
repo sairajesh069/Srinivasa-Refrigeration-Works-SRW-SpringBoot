@@ -11,7 +11,6 @@ import com.srinivasa.refrigeration.works.srw_springboot.service.UserCredentialSe
 import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -38,7 +37,7 @@ public class LoginController {
     private Long jwtExpiration;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseBody> login(@RequestBody CredentialsDTO credentials, HttpServletRequest request) {
+    public ResponseEntity<LoginResponseBody> login(@RequestBody CredentialsDTO credentials) {
         try {
             Map<String, String> userAuthDetails = userCredentialService.userValidationAndGetUserId(credentials);
             String userId = userAuthDetails.get("userId");
@@ -50,11 +49,11 @@ public class LoginController {
             );
             AuthenticatedUserDTO authenticatedUserDTO = switch (userType) {
                 case "CUSTOMER" ->
-                        (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true, request);
+                        (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true);
                 case "OWNER" ->
                         (AuthenticatedUserDTO) ownerService.getOwnerByIdentifier(userId, true);
                 case "EMPLOYEE" ->
-                        (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true, request);
+                        (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true);
                 default -> null;
             };
             LoginResponseBody successResponse = new LoginResponseBody(
