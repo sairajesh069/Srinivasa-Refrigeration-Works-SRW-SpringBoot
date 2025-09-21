@@ -27,6 +27,7 @@ public class CustomerService {
     private final CustomerMapper customerMapper;
     private final UserCredentialService userCredentialService;
     private final AccessCheck accessCheck;
+    private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "customers", allEntries = true)
@@ -38,6 +39,12 @@ public class CustomerService {
         customer.setStatus(UserStatus.ACTIVE);
         customerRepository.save(customer);
         userCredentialService.saveCredential(customerCredentialDTO.getUserCredentialDTO(), customer.getCustomerId(), UserType.CUSTOMER);
+        notificationService.saveNotification(
+                NotificationMessages.buildWelcomeNotification(
+                        customer.getFirstName() + " " + customer.getLastName(),
+                        customer.getCustomerId()
+                )
+        );
         return customerMapper.toDto(customer);
     }
 
@@ -60,6 +67,12 @@ public class CustomerService {
             if (accessCheck.canAccessProfile(customer.getCustomerId())) {
                 return customerMapper.toDto(customer);
             } else {
+                notificationService.saveNotification(
+                        NotificationMessages.buildUnauthorizedAccessNotification(
+                                "another customer profile",
+                                LocalDateTime.now()
+                        )
+                );
                 throw new SecurityException("Unauthorized access: Attempt to fetch restricted customer profile");
             }
         }
@@ -85,6 +98,12 @@ public class CustomerService {
             userCredentialService.updateDetails(customerCredentialDTO.getUserCredentialDTO());
         }
         customerRepository.save(customer);
+        notificationService.saveNotification(
+                NotificationMessages.buildUserProfileUpdatedNotification(
+                        customer.getCustomerId(),
+                        LocalDateTime.now()
+                )
+        );
         CustomerDTO updatedCustomerDTO = customerMapper.toDto(customer);
         updatedCustomerDTO.setCreatedAt(customerDTO.getCreatedAt());
         return updatedCustomerDTO;
@@ -114,5 +133,9 @@ public class CustomerService {
         int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
         customerRepository.updateStatusById(userId, status, LocalDateTime.now());
         userCredentialService.updateUserStatus(userId, (byte) enabled);
+        notificationService.saveNotification(status.equals(UserStatus.ACTIVE)
+                ? NotificationMessages.buildUserProfileActivatedNotification(userId, LocalDateTime.now())
+                : NotificationMessages.buildUserProfileDeactivatedNotification(userId, LocalDateTime.now())
+        );
     }
 }

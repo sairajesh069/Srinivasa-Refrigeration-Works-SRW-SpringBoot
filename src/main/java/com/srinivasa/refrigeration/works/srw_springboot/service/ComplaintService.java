@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class ComplaintService {
     private final ComplaintMapper complaintMapper;
     private final ComplaintRepository complaintRepository;
     private final AccessCheck accessCheck;
+    private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "complaints", allEntries = true)
@@ -36,6 +38,13 @@ public class ComplaintService {
         complaint.setStatus(ComplaintStatus.PENDING);
         complaint.setComplaintState(ComplaintState.SUBMITTED);
         complaintRepository.save(complaint);
+        notificationService.saveNotification(
+                NotificationMessages.buildComplaintRegisteredNotification(
+                        complaint.getProductType(),
+                        complaint.getComplaintId(),
+                        LocalDateTime.now()
+                )
+        );
         return complaintMapper.toDto(complaint);
     }
 
@@ -49,6 +58,12 @@ public class ComplaintService {
                     .toList();
         }
         else {
+            notificationService.saveNotification(
+                    NotificationMessages.buildUnauthorizedAccessNotification(
+                            "another user's complaint list",
+                            LocalDateTime.now()
+                    )
+            );
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
         }
     }
@@ -72,6 +87,12 @@ public class ComplaintService {
                     .toList();
         }
         else {
+            notificationService.saveNotification(
+                    NotificationMessages.buildUnauthorizedAccessNotification(
+                            "another technician's assigned complaint list",
+                            LocalDateTime.now()
+                    )
+            );
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
         }
     }
@@ -84,6 +105,12 @@ public class ComplaintService {
             return complaintMapper.toDto(complaint);
         }
         else {
+            notificationService.saveNotification(
+                    NotificationMessages.buildUnauthorizedAccessNotification(
+                            "another complaint details",
+                            LocalDateTime.now()
+                    )
+            );
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaint");
         }
     }
@@ -96,6 +123,7 @@ public class ComplaintService {
             put = @CachePut(value = "complaint", key = "'update-' + #complaintDTO.complaintId")
     )
     public ComplaintDTO updateComplaint(ComplaintDTO complaintDTO) {
+        boolean isInfoUpdate = true;
         Complaint complaint = complaintMapper.toEntity(complaintDTO);
         complaint.setComplaintReference(complaintDTO.getComplaintId().replaceAll("\\D", "").trim());
         complaint.setComplaintId(complaintDTO.getComplaintId());
@@ -109,16 +137,108 @@ public class ComplaintService {
                     complaintDTO.getTechnicianDetails().getPhoneNumber())
             );
         }
+        if(complaintDTO.getStatus().equals(ComplaintStatus.IN_PROGRESS)) {
+            isInfoUpdate = false;
+            notificationService.saveNotification(
+                    NotificationMessages.buildTechnicianEnRouteNotification(
+                            complaint.getBookedById(),
+                            complaint.getTechnicianDetails().getFullName(),
+                            complaint.getProductType(),
+                            complaint.getComplaintId(),
+                            LocalDateTime.now(),
+                            Duration.ofHours(2),
+                            complaint.getTechnicianDetails().getPhoneNumber()
+                    )
+            );
+        }
         if (!complaintDTO.getTechnicianDetails().getEmployeeId().isEmpty()) {
+            isInfoUpdate = false;
             if (complaintDTO.getComplaintState().equals(ComplaintState.SUBMITTED)) {
                 complaint.setComplaintState(ComplaintState.ASSIGNED);
+                notificationService.saveNotification(
+                        NotificationMessages.buildComplaintAssignedNotification(
+                                complaint.getTechnicianDetails().getEmployeeId(),
+                                complaint.getProductType(),
+                                complaint.getComplaintId(),
+                                complaint.getCustomerName(),
+                                complaint.getContactNumber(),
+                                LocalDateTime.now()
+                        )
+                );
+                notificationService.saveNotification(
+                        NotificationMessages.buildTechnicianAssignedNotification(
+                                complaint.getBookedById(),
+                                complaint.getTechnicianDetails().getFullName(),
+                                complaint.getProductType(),
+                                complaint.getComplaintId(),
+                                complaint.getTechnicianDetails().getPhoneNumber(),
+                                LocalDateTime.now()
+                        )
+                );
             }
             if(complaintDTO.getStatus().equals(ComplaintStatus.RESOLVED)) {
                 complaint.setComplaintState(ComplaintState.CLOSED);
                 complaint.setClosedAt(LocalDateTime.now());
+                notificationService.saveNotification(
+                        NotificationMessages.buildComplaintResolvedNotification(
+                                complaint.getBookedById(),
+                                complaint.getProductType(),
+                                complaint.getComplaintId(),
+                                LocalDateTime.now(),
+                                complaint.getTechnicianDetails().getFullName()
+                        )
+                );
+                notificationService.saveNotification(
+                        NotificationMessages.buildPendingFeedbackNotification(
+                                complaint.getBookedById(),
+                                complaint.getComplaintId()
+                        )
+                );
             }
         }
+        if(!(complaintDTO.getInitialAssigneeId() == null || complaintDTO.getInitialAssigneeId().isEmpty()) && !complaintDTO.getTechnicianDetails().getEmployeeId().equals(complaintDTO.getInitialAssigneeId())) {
+            isInfoUpdate = false;
+            notificationService.saveNotification(
+                    NotificationMessages.buildTechnicianReAssignedNotification(
+                            complaint.getBookedById(),
+                            complaint.getTechnicianDetails().getFullName(),
+                            complaint.getProductType(),
+                            complaint.getComplaintId(),
+                            complaint.getTechnicianDetails().getPhoneNumber()
+                    )
+            );
+            notificationService.saveNotification(
+                    NotificationMessages.buildComplaintAssignedNotification(
+                            complaint.getTechnicianDetails().getEmployeeId(),
+                            complaint.getProductType(),
+                            complaint.getComplaintId(),
+                            complaint.getCustomerName(),
+                            complaint.getContactNumber(),
+                            LocalDateTime.now()
+                    )
+            );
+            notificationService.saveNotification(
+                    NotificationMessages.buildComplaintTransferedNotification(
+                            complaintDTO.getInitialAssigneeId(),
+                            complaintDTO.getTechnicianDetails().getEmployeeId(),
+                            complaint.getProductType(),
+                            complaint.getComplaintId(),
+                            complaintDTO.getTechnicianDetails().getFullName(),
+                            LocalDateTime.now()
+                    )
+            );
+        }
         complaintRepository.save(complaint);
+        if(isInfoUpdate) {
+            notificationService.saveNotification(
+                    NotificationMessages.buildComplaintUpdatedNotification(
+                            complaint.getProductType(),
+                            complaint.getComplaintId(),
+                            complaint.getBookedById(),
+                            LocalDateTime.now()
+                    )
+            );
+        }
         ComplaintDTO updatedComplaintDTO = complaintMapper.toDto(complaint);
         updatedComplaintDTO.setCreatedAt(complaintDTO.getCreatedAt());
         return updatedComplaintDTO;
@@ -146,6 +266,12 @@ public class ComplaintService {
                     .toList();
         }
         else {
+            notificationService.saveNotification(
+                    NotificationMessages.buildUnauthorizedAccessNotification(
+                            "another user's resolved complaint list",
+                            LocalDateTime.now()
+                    )
+            );
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
         }
     }
@@ -161,8 +287,24 @@ public class ComplaintService {
         if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo())) {
             complaintRepository.updateState(updateComplaintStateDTO.getComplaintId(),
                     updateComplaintStateDTO.getComplaintState(), LocalDateTime.now());
+            if(updateComplaintStateDTO.getComplaintState().equals(ComplaintState.REOPENED)) {
+                notificationService.saveNotification(
+                        NotificationMessages.buildComplaintReopenedNotification(
+                                updateComplaintStateDTO.getProductType(),
+                                updateComplaintStateDTO.getComplaintId(),
+                                updateComplaintStateDTO.getBookedById(),
+                                LocalDateTime.now()
+                        )
+                );
+            }
         }
         else {
+            notificationService.saveNotification(
+                    NotificationMessages.buildUnauthorizedAccessNotification(
+                            "update complaint state",
+                            LocalDateTime.now()
+                    )
+            );
             throw new SecurityException("Unauthorized access: Attempt to update restricted complaint state");
         }
     }

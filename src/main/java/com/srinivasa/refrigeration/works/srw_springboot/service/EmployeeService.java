@@ -26,6 +26,7 @@ public class EmployeeService {
     private final OwnerRepository ownerRepository;
     private final UserCredentialService userCredentialService;
     private final AccessCheck accessCheck;
+    private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "employees", allEntries = true)
@@ -40,6 +41,12 @@ public class EmployeeService {
         }
         employeeRepository.save(employee);
         userCredentialService.saveCredential(employeeCredentialDTO.getUserCredentialDTO(), employee.getEmployeeId(), UserType.EMPLOYEE);
+        notificationService.saveNotification(
+                NotificationMessages.buildWelcomeNotification(
+                        employee.getFirstName() + " " + employee.getLastName(),
+                        employee.getEmployeeId()
+                )
+        );
         return employeeMapper.toDto(employee);
     }
 
@@ -62,6 +69,12 @@ public class EmployeeService {
             if (accessCheck.canAccessProfile(employee.getEmployeeId())) {
                 return employeeMapper.toDto(employee);
             } else {
+                notificationService.saveNotification(
+                        NotificationMessages.buildUnauthorizedAccessNotification(
+                                "another employee profile",
+                                LocalDateTime.now()
+                        )
+                );
                 throw new SecurityException("Unauthorized access: Attempt to fetch restricted employee profile");
             }
         }
@@ -90,6 +103,12 @@ public class EmployeeService {
             userCredentialService.updateDetails(employeeCredentialDTO.getUserCredentialDTO());
         }
         employeeRepository.save(employee);
+        notificationService.saveNotification(
+                NotificationMessages.buildUserProfileUpdatedNotification(
+                        employee.getEmployeeId(),
+                        LocalDateTime.now()
+                )
+        );
         EmployeeDTO updatedEmployeeDTO = employeeMapper.toDto(employee);
         updatedEmployeeDTO.setDateOfHire(employeeDTO.getDateOfHire());
         return updatedEmployeeDTO;
@@ -144,5 +163,9 @@ public class EmployeeService {
         int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
         employeeRepository.updateStatusById(userId, status, LocalDateTime.now());
         userCredentialService.updateUserStatus(userId, (byte) enabled);
+        notificationService.saveNotification(status.equals(UserStatus.ACTIVE)
+                ? NotificationMessages.buildUserProfileActivatedNotification(userId, LocalDateTime.now())
+                : NotificationMessages.buildUserProfileDeactivatedNotification(userId, LocalDateTime.now())
+        );
     }
 }

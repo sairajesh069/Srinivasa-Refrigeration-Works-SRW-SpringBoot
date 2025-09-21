@@ -15,8 +15,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,6 +30,8 @@ public class OwnerService {
     private final OwnerMapper ownerMapper;
     private final EmployeeRepository employeeRepository;
     private final UserCredentialService userCredentialService;
+    private final AccessCheck accessCheck;
+    private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "owners", allEntries = true)
@@ -42,6 +46,12 @@ public class OwnerService {
         }
         ownerRepository.save(owner);
         userCredentialService.saveCredential(ownerCredentialDTO.getUserCredentialDTO(), owner.getOwnerId(), UserType.OWNER);
+        notificationService.saveNotification(
+                NotificationMessages.buildWelcomeNotification(
+                        owner.getFirstName() + " " + owner.getLastName(),
+                        owner.getOwnerId()
+                )
+        );
         return ownerMapper.toDto(owner);
     }
 
@@ -60,7 +70,19 @@ public class OwnerService {
                     "OWNER"
             );
         }
-        return ownerMapper.toDto(owner);
+        else {
+            if (accessCheck.canAccessProfile(owner.getOwnerId())) {
+                return ownerMapper.toDto(owner);
+            } else {
+                notificationService.saveNotification(
+                        NotificationMessages.buildUnauthorizedAccessNotification(
+                                "another owner profile",
+                                LocalDateTime.now()
+                        )
+                );
+                throw new SecurityException("Unauthorized access: Attempt to fetch restricted owner profile");
+            }
+        }
     }
 
     @Transactional
@@ -86,6 +108,12 @@ public class OwnerService {
             userCredentialService.updateDetails(ownerCredentialDTO.getUserCredentialDTO());
         }
         ownerRepository.save(owner);
+        notificationService.saveNotification(
+                NotificationMessages.buildUserProfileUpdatedNotification(
+                        owner.getOwnerId(),
+                        LocalDateTime.now()
+                )
+        );
         OwnerDTO updatedOwnerDTO = ownerMapper.toDto(owner);
         updatedOwnerDTO.setCreatedAt(ownerDTO.getCreatedAt());
         return updatedOwnerDTO;
@@ -115,5 +143,9 @@ public class OwnerService {
         int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
         ownerRepository.updateStatusById(userId, status, LocalDateTime.now());
         userCredentialService.updateUserStatus(userId, (byte) enabled);
+        notificationService.saveNotification(status.equals(UserStatus.ACTIVE)
+                ? NotificationMessages.buildUserProfileActivatedNotification(userId, LocalDateTime.now())
+                : NotificationMessages.buildUserProfileDeactivatedNotification(userId, LocalDateTime.now())
+        );
     }
 }

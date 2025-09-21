@@ -29,7 +29,7 @@ public class Notification implements Serializable {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "message")
+    @Column(name = "message", columnDefinition = "TEXT")
     private String message;
 
     @Enumerated(EnumType.STRING)
@@ -38,4 +38,11 @@ public class Notification implements Serializable {
 
     @Column(name = "created_at", updatable = false)
     private final LocalDateTime createdAt = LocalDateTime.now();
+
+    public Notification(String userId, String title, String message, NotificationType type) {
+        this.userId = userId;
+        this.title = title;
+        this.message = message;
+        this.type = type;
+    }
 }

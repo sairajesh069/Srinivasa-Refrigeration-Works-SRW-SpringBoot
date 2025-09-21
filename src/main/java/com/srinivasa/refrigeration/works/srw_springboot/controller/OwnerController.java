@@ -77,6 +77,14 @@ public class OwnerController {
             );
             return ResponseEntity.ok(successResponse);
         }
+        catch(SecurityException exception) {
+            UserProfileResponseBody<OwnerDTO> errorResponse = new UserProfileResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.FORBIDDEN.value(),
+                    ownerDTO
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        }
         catch(Exception exception) {
             UserProfileResponseBody<OwnerDTO> errorResponse = new UserProfileResponseBody<>(
                     exception.getMessage(),

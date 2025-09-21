@@ -1,7 +1,6 @@
 package com.srinivasa.refrigeration.works.srw_springboot.payload.dto;
 
 import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,4 +21,6 @@ public class UpdateComplaintStateDTO implements Serializable {
     private String complaintId;
     private ComplaintState complaintState;
     private String assignedTo;
+    private String bookedById;
+    private String productType;
 }

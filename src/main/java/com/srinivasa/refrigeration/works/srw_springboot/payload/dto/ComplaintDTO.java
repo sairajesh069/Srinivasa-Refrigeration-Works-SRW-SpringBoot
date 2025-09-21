@@ -39,4 +39,5 @@ public class ComplaintDTO implements Serializable {
     private String customerFeedback;
     private LocalDateTime reopenedAt;
     private ComplaintState complaintState;
+    private String initialAssigneeId;
 }
