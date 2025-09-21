@@ -191,7 +191,8 @@ public class ComplaintService {
                 notificationService.saveNotification(
                         NotificationMessages.buildPendingFeedbackNotification(
                                 complaint.getBookedById(),
-                                complaint.getComplaintId()
+                                complaint.getComplaintId(),
+                                complaint.getProductType()
                         )
                 );
             }

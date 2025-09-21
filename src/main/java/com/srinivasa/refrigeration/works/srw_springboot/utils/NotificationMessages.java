@@ -9,16 +9,28 @@ public class NotificationMessages {
 
     public static String userId = SecurityUtil.getCurrentUserId();
 
+    public static String buildComplaintRedirectUrl(String complaintId) {
+        return (SecurityUtil.getCurrentUserType().equals("OWNER") ? "/all" : "/my")  + "-complaints?complaintId=" + complaintId;
+    }
+
+    public static String buildUserProfileRedirectUrl(String userId) {
+        return "/profile?userId=" + userId;
+    }
+
+    public static String buildPhoneNumberRedirectUrl(String phoneNumber) {
+        return "tel:" + phoneNumber;
+    }
+
     public static Map<String, Object> buildWelcomeNotification(String fullName, String registeredUserId) {
         return Map.of(
                 "userId", registeredUserId,
                 "title", "Welcome to ServiceHub",
                 "message", String.format(
-                        "Hi %s, welcome to ServiceHub — your comprehensive service management platform. " +
-                            "Your account (User Id: %s) has been successfully created and verified. " +
+                        "Hi <b>%s</b>, welcome to ServiceHub — your comprehensive service management platform. " +
+                            "Your account <b>(User ID: <a href='%s'>%s</a>)</b> has been successfully created and verified. " +
                             "You can now register complaints, track service requests, and manage your profile with ease. " +
                             "If you need any assistance, our support team is always here to help.",
-                        fullName, registeredUserId
+                        fullName, buildUserProfileRedirectUrl(registeredUserId), registeredUserId
                 ),
                 "type", NotificationType.INFO
         );
@@ -26,18 +38,20 @@ public class NotificationMessages {
 
     public static Map<String, Object> buildUserProfileUpdatedNotification(String updatedProfileId, LocalDateTime dateTime) {
         boolean isSelfUpdate = userId.equals(updatedProfileId);
+        String notifiedToId = userId.equals(updatedProfileId) ? userId : updatedProfileId;
         return Map.of(
-                "userId", isSelfUpdate ? userId : updatedProfileId,
+                "userId", notifiedToId,
                 "title", "Profile Updated Successfully",
                 "message", String.format(
                         isSelfUpdate
-                                ? "Your profile (User ID: %s) was updated successfully on %s. " +
+                                ? "Your profile <b>(User ID: <a href='%s'>%s</a>)</b> was updated successfully on <b>%s</b>. " +
                                     "The changes are now active on your account. " +
-                                    "If you did not make this update, please contact our support team immediately."
-                                : "Your profile (User ID: %s) has been updated by an administrator on %s. " +
+                                    "If you did not make this update, please <b><a href='%s'>contact</a></b> our support team immediately."
+                                : "Your profile <b>(User ID: <a href='%s'>%s</a>)</b> has been updated by an administrator on <b>%s</b>. " +
                                     "The changes are now active on your account. " +
-                                    "If this update seems incorrect, please contact our support team immediately.",
-                        isSelfUpdate ? userId : updatedProfileId, CustomDateTimeFormatter.formatDateTime(dateTime)),
+                                    "If this update seems incorrect, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        buildUserProfileRedirectUrl(notifiedToId), notifiedToId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
+                ),
                 "type", NotificationType.INFO
         );
     }
@@ -47,10 +61,11 @@ public class NotificationMessages {
                 "userId", updatedProfileId,
                 "title", "Profile Activated Successfully",
                 "message", String.format(
-                        "Your profile (User ID: %s) was activated by an administrator on %s. " +
+                        "Your profile <b>(User ID: <a href='%s'>%s</a>)</b> was activated by an administrator on <b>%s</b>. " +
                             "The update is now live on your account. " +
-                            "If this activation seems incorrect, please contact our support team immediately.",
-                        updatedProfileId, CustomDateTimeFormatter.formatDateTime(dateTime)),
+                            "If this activation seems incorrect, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        buildUserProfileRedirectUrl(updatedProfileId), updatedProfileId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
+                ),
                 "type", NotificationType.INFO
         );
     }
@@ -60,9 +75,9 @@ public class NotificationMessages {
                 "userId", userId,
                 "title", "Profile Deactivated Successfully",
                 "message", String.format(
-                        "Profile (User ID: %s) was deactivated by Admin (Admin ID: %s) on %s. " +
+                        "Profile <b>(User ID: <a href='%s'>%s</a>)</b> was deactivated successfully on <b>%s</b>. " +
                             "The deactivation has been recorded in the system.",
-                        updatedProfileId, userId, CustomDateTimeFormatter.formatDateTime(dateTime)),
+                        buildUserProfileRedirectUrl(updatedProfileId), updatedProfileId, CustomDateTimeFormatter.formatDateTime(dateTime)),
                 "type", NotificationType.INFO
         );
     }
@@ -72,10 +87,10 @@ public class NotificationMessages {
                 "userId", userId,
                 "title", "Service Request Approved",
                 "message", String.format(
-                        "Your %s (Complaint Id: %s) repair request submitted on %s has been approved. " +
+                        "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair request submitted on <b>%s</b> has been approved. " +
                             "A technician will be assigned shortly, and you will receive further updates once scheduled. " +
                             "Thank you for choosing our services.",
-                        productType, complaintId, CustomDateTimeFormatter.formatDateTime(dateTime)
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, CustomDateTimeFormatter.formatDateTime(dateTime)
                 ),
                 "type", NotificationType.INFO
                 );
@@ -88,13 +103,13 @@ public class NotificationMessages {
                 "title", "Complaint Updated Successfully",
                 "message", String.format(
                         isSelfUpdate
-                            ? "Your %s (Complaint Id: %s) repair request was updated successfully on %s. " +
+                            ? "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair request was updated successfully on <b>%s</b>. " +
                                 "The changes are now active on your account. " +
-                                "If you did not make this update, please contact our support team immediately."
-                            : "Your %s (Complaint Id: %s) repair request has been updated by an administrator on %s. " +
+                                "If you did not make this update, please <b><a href='%s'>contact</a></b> our support team immediately."
+                            : "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair request has been updated by an administrator on <b>%s</b>. " +
                                 "The changes are now active on your account. " +
-                                "If this update seems incorrect, please contact our support team immediately.",
-                        productType, complaintId, CustomDateTimeFormatter.formatDateTime(dateTime)
+                                "If this update seems incorrect, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
                 ),
                 "type", NotificationType.INFO
                 );
@@ -105,10 +120,10 @@ public class NotificationMessages {
                 "userId", complaintOwnerId,
                 "title", "Complaint Reopened by admin/technician",
                 "message", String.format(
-                        "Your %s (Complaint Id: %s) repair request has been reopened on %s. " +
+                        "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair request has been reopened on <b>%s</b>. " +
                             "The changes are now active on your account. " +
-                            "If this update seems incorrect, please contact our support team immediately.",
-                        productType, complaintId, CustomDateTimeFormatter.formatDateTime(dateTime)
+                            "If this update seems incorrect, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
                 ),
                 "type", NotificationType.INFO
                 );
@@ -119,11 +134,11 @@ public class NotificationMessages {
                 "userId", assignedToId,
                 "title", "Complaint Assigned",
                 "message", String.format(
-                        "You have been assigned to resolve the %s repair (Complaint ID: %s) on %s. " +
-                            "Customer: %s (Contact: %s). " +
+                        "You have been assigned to resolve the <b>%s repair (Complaint ID: <a href='%s'>%s</a>)</b> on <b>%s</b>. " +
+                            "<b>Customer: %s (Contact: <a href='%s'>%s</a>)</b>. " +
                             "Please reach out to the customer and confirm before visiting. " +
                             "Ensure the repair is completed within the scheduled time.",
-                        productType, complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), customerName, customerContact
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), customerName, buildPhoneNumberRedirectUrl(customerContact), customerContact
                 ),
                 "type", NotificationType.INFO
         );
@@ -134,10 +149,10 @@ public class NotificationMessages {
                 "userId", oldAssigneeId,
                 "title", "Assigned Complaint Transfered",
                 "message", String.format(
-                        "The %s repair (Complaint ID: %s) previously assigned to you has been transferred to technician %s (Technician ID: %s) on %s. " +
+                        "The <b>%s repair (Complaint ID: <a href='%s'>%s</a>)</b> previously assigned to you has been transferred to technician <b>%s (Technician ID: %s)</b> on <b>%s</b>. " +
                             "No further action is required from your side for this complaint." +
-                            "For more details regarding this transfer, please contact the administrator.",
-                        productType, complaintId, newAssigneeName, newAssigneeId, CustomDateTimeFormatter.formatDateTime(dateTime)
+                            "For more details regarding this transfer, please <b><a href='%s'>contact</a></b> the administrator.",
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, newAssigneeName, newAssigneeId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
                 ),
                 "type", NotificationType.INFO
         );
@@ -148,10 +163,10 @@ public class NotificationMessages {
                 "userId", bookedById,
                 "title", "Technician Assigned",
                 "message", String.format(
-                        "Technician %s is assigned on %s to resolve the %s (Complaint Id: %s) repair. " +
-                            "They will contact you shortly to confirm the visit. Contact: %s.  " +
+                        "Technician <b>%s</b> is assigned on <b>%s</b> to resolve the <b>%s repair (Complaint ID: <a href='%s'>%s</a>)</b>. " +
+                            "They will contact you shortly to confirm the visit. <b>Contact: <a href='%s'>%s</a></b>.  " +
                             "Please ensure someone is available at the premises during the scheduled time.",
-                        technicianName, CustomDateTimeFormatter.formatDateTime(dateTime), productType, complaintId, phoneNumber
+                        technicianName, CustomDateTimeFormatter.formatDateTime(dateTime), productType, buildComplaintRedirectUrl(complaintId), complaintId, buildPhoneNumberRedirectUrl(phoneNumber), phoneNumber
                 ),
                 "type", NotificationType.REPAIR_UPDATE
         );
@@ -162,10 +177,10 @@ public class NotificationMessages {
                 "userId", bookedById,
                 "title", "Technician Re-Assigned",
                 "message", String.format(
-                        "Your assigned technician has been changed, and %s will now handle your %s repair (Complaint ID: %s). " +
-                            "Your appointment time remains unchanged. Contact: %s. " +
+                        "Your assigned technician has been changed, and <b>%s</b> will now handle your <b>%s repair (Complaint ID: <a href='%s'>%s</a>)</b>. " +
+                            "Your appointment time remains unchanged. <b>Contact: <a href='%s'>%s</a></b>. " +
                             "Please ensure someone is available at the premises during the scheduled time.",
-                        technicianName, productType, complaintId, phoneNumber
+                        technicianName, productType, buildComplaintRedirectUrl(complaintId), complaintId, buildPhoneNumberRedirectUrl(phoneNumber), phoneNumber
                 ),
                 "type", NotificationType.REPAIR_UPDATE
         );
@@ -176,10 +191,10 @@ public class NotificationMessages {
                 "userId", bookedById,
                 "title", "Technician En-Route",
                 "message", String.format(
-                        "Your assigned technician %s is en route to your location for the scheduled %s (Complaint Id: %s) repair. " +
-                            "Expected arrival time: %s. Contact: %s.  " +
+                        "Your assigned technician <b>%s</b> is en route to your location for the scheduled <b>%s repair (Complaint ID: %s)</b>. " +
+                            "Expected arrival time: <b>%s</b>. <b>Contact: <a href='%s'>%s</a></b>.  " +
                             "Please ensure someone is available at the premises during the scheduled time.",
-                        technicianName, productType, complaintId,CustomDateTimeFormatter.formatEndTime(dateTime, period), phoneNumber
+                        technicianName, productType, complaintId,CustomDateTimeFormatter.formatEndTime(dateTime, period), buildPhoneNumberRedirectUrl(phoneNumber), phoneNumber
                 ),
                 "type", NotificationType.REPAIR_UPDATE
         );
@@ -190,24 +205,24 @@ public class NotificationMessages {
                 "userId", bookedById,
                 "title", "Service Completed Successfully",
                 "message", String.format(
-                        "Your %s (Complaint Id: %s) repair has been completed successfully on %s. " +
-                            "The technician %s has updated the complaint status and left detailed notes about the work performed. " +
+                        "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair has been completed successfully on <b>%s</b>. " +
+                            "The technician <b>%s</b> has updated the complaint status and left detailed notes about the work performed. " +
                             "Please rate your service experience and provide feedback.",
-                        productType, complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), technicianName
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId, CustomDateTimeFormatter.formatDateTime(dateTime), technicianName
                 ),
                 "type", NotificationType.REPAIR_UPDATE
         );
     }
 
-    public static Map<String, Object> buildPendingFeedbackNotification(String bookedById, String complaintId) {
+    public static Map<String, Object> buildPendingFeedbackNotification(String bookedById, String complaintId, String productType) {
         return Map.of(
                 "userId", bookedById,
                 "title", "Reminder: Pending Service Rating",
                 "message", String.format(
-                        "You have a pending service rating for complaint %s. " +
+                        "You have a pending service rating for <b>%s repair (Complaint ID: <a href='%s'>%s</a>)</b>. " +
                             "Your feedback helps us improve our services and assists other customers in making informed decisions. " +
                             "Please take a moment to rate your recent service experience.",
-                        complaintId
+                        productType, buildComplaintRedirectUrl(complaintId), complaintId
                 ),
                 "type", NotificationType.WARNING
         );
@@ -218,9 +233,9 @@ public class NotificationMessages {
                 "userId", userId,
                 "title", "Unauthorized Resource Access",
                 "message", String.format(
-                        "We detected an attempt to access %s that you are not authorized to view on %s. " +
-                            "If this was not you, please contact our support team immediately.",
-                        CustomDateTimeFormatter.formatDateTime(dateTime), resourceContext
+                        "We detected an attempt to access <b>%s</b> that you are not authorized to view on <b>%s</b>. " +
+                            "If this was not you, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        CustomDateTimeFormatter.formatDateTime(dateTime), resourceContext, buildPhoneNumberRedirectUrl("+918555976776")
                 ),
                 "type", NotificationType.WARNING
         );
@@ -232,7 +247,7 @@ public class NotificationMessages {
                 "title", "Database Connection Error",
                 "message", String.format(
                         "We're experiencing temporary database connectivity issues that may affect complaint submission and status updates. " +
-                            "Our technical team is actively working to resolve this issue. Expected resolution time: %s. " +
+                            "Our technical team is actively working to resolve this issue. Expected resolution time: <b>%s</b>. " +
                             "We apologize for any inconvenience and appreciate your patience.",
                         CustomDateTimeFormatter.formatEndDateTime(dateTime, period)
                 ),
@@ -245,7 +260,7 @@ public class NotificationMessages {
                 "userId", "ALL_USERS",
                 "title", "System Maintenance Alert",
                 "message", String.format(
-                        "Scheduled system maintenance will occur on %s. " +
+                        "Scheduled system maintenance will occur on <b>%s</b>. " +
                             "During this time, you may experience temporary service interruptions. " +
                             "We apologize for any inconvenience and appreciate your patience.",
                         CustomDateTimeFormatter.formatWithPeriod(dateTime, period, ZoneId.of("Asia/Kolkata"))
