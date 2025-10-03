@@ -17,6 +17,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -30,11 +31,15 @@ public class UserCredentialService {
     @Transactional
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void saveCredential(UserCredentialDTO userCredentialDTO, String userId, UserType userType) {
+        if(userCredentialDTO.getAgreedToTerms() != 1) {
+            throw new IllegalArgumentException("Please accept the Terms and Conditions to complete registration.");
+        }
         UserCredential userCredential = userCredentialMapper.toEntity(userCredentialDTO);
         userCredential.setUserId(userId);
         userCredential.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(userCredential.getPhoneNumber()));
         userCredential.setUserType(userType);
         userCredential.setEnabled(userType.equals(UserType.CUSTOMER) ? (short) 1 : (short) 0);
+        userCredential.setAgreedToTerms(userCredentialDTO.getAgreedToTerms());
         userCredential.setPassword(passwordEncoder.encode(userCredential.getPassword()));
         userCredentialRepository.save(userCredential);
     }
@@ -87,12 +92,12 @@ public class UserCredentialService {
                 throw new UserValidationException("Invalid current password");
             }
             userCredentialRepository.updatePassword(changePasswordDTO.getUsername(),
-                    passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+                    passwordEncoder.encode(changePasswordDTO.getNewPassword()), LocalDateTime.now());
         }
         else {
             AccountRecoveryDTO accountRecoveryDTO = (AccountRecoveryDTO) DTO;
             userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(),
-                    passwordEncoder.encode(accountRecoveryDTO.getPassword()));
+                    passwordEncoder.encode(accountRecoveryDTO.getPassword()), LocalDateTime.now());
         }
     }
 
@@ -105,6 +110,6 @@ public class UserCredentialService {
 
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void updateUserStatus(String userId, byte enabled) {
-        userCredentialRepository.updateUserStatusById(userId, enabled);
+        userCredentialRepository.updateUserStatusById(userId, enabled, LocalDateTime.now());
     }
 }

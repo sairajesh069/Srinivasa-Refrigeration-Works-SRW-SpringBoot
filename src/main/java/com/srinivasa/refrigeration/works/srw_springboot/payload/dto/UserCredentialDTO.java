@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -22,4 +23,6 @@ public class UserCredentialDTO implements Serializable {
     private String password;
     private String phoneNumber;
     private String email;
+    private short agreedToTerms;
+    private LocalDateTime updatedAt;
 }

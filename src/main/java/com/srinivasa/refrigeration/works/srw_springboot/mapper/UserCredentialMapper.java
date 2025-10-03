@@ -13,10 +13,12 @@ public interface UserCredentialMapper {
 
     /*
      * Converts UserCredentialDTO to UserCredential entity
-     * Ignores userId, authorities, enabled, userType fields during mappings
+     * Ignores userId, agreedToTerms, authorities, enabled, updatedAt, userType fields during mappings
      */
     @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "agreedToTerms", ignore = true)
     @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "userType", ignore = true)
     @Mapping(target = "authorities", ignore = true)
     UserCredential toEntity(UserCredentialDTO userCredentialDTO);

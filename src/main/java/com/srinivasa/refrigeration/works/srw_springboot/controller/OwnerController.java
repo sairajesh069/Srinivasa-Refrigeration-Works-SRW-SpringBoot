@@ -55,6 +55,14 @@ public class OwnerController {
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
+        catch (IllegalArgumentException exception) {
+            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.NOT_ACCEPTABLE.value(),
+                    ownerDTO
+            );
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(errorResponse);
+        }
         catch(Exception exception) {
             UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
                     exception.getMessage(),

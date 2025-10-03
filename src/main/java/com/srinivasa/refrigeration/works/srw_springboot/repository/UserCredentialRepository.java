@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -24,8 +25,8 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
 
     @Modifying
     @Transactional
-    @Query("UPDATE UserCredential uc SET uc.password = :password WHERE uc.username = :loginId OR uc.email = :loginId")
-    void updatePassword(@Param("loginId") String loginId, @Param("password") String password);
+    @Query("UPDATE UserCredential uc SET uc.password = :password, updatedAt = :updatedAt WHERE uc.username = :loginId OR uc.email = :loginId")
+    void updatePassword(@Param("loginId") String loginId, @Param("password") String password, @Param("updatedAt") LocalDateTime updatedAt);
 
     @Modifying
     @Transactional
@@ -39,6 +40,6 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
 
     @Modifying
     @Transactional
-    @Query("UPDATE UserCredential SET enabled = :enabled WHERE userId = :userId")
-    void updateUserStatusById(@Param("userId") String userId, @Param("enabled") byte enabled);
+    @Query("UPDATE UserCredential SET enabled = :enabled, updatedAt = :updatedAt WHERE userId = :userId")
+    void updateUserStatusById(@Param("userId") String userId, @Param("enabled") byte enabled, @Param("updatedAt") LocalDateTime updatedAt);
 }

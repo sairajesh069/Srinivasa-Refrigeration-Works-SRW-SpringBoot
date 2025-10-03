@@ -55,6 +55,14 @@ public class EmployeeController {
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
+        catch (IllegalArgumentException exception) {
+            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.NOT_ACCEPTABLE.value(),
+                    employeeDTO
+            );
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(errorResponse);
+        }
         catch(Exception exception) {
             UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
                     exception.getMessage(),

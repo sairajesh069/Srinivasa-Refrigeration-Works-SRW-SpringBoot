@@ -46,6 +46,14 @@ public class CustomerController {
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
+        catch (IllegalArgumentException exception) {
+            UserRegisterResponseBody<CustomerDTO> errorResponse = new UserRegisterResponseBody<>(
+                    exception.getMessage(),
+                    HttpStatus.NOT_ACCEPTABLE.value(),
+                    customerDTO
+            );
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(errorResponse);
+        }
         catch(Exception exception) {
             UserRegisterResponseBody<CustomerDTO> errorResponse = new UserRegisterResponseBody<>(
                     exception.getMessage(),

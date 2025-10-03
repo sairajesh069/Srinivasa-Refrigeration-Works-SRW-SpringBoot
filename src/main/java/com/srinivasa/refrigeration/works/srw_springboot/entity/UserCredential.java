@@ -1,5 +1,6 @@
 package com.srinivasa.refrigeration.works.srw_springboot.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -46,8 +48,15 @@ public class UserCredential implements UserDetails, Serializable {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "agreed_to_terms")
+    private short agreedToTerms;
+
     @Column(name = "enabled")
     private short enabled;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
