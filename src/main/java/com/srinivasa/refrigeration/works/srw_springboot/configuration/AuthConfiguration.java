@@ -48,6 +48,7 @@ public class AuthConfiguration {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/srw/home", "/srw/login").permitAll()
+                        .requestMatchers("/srw/logout").authenticated()
                         .requestMatchers("/srw/forgot-username", "/srw/validate-user", "/srw/forgot-password").permitAll()
                         .requestMatchers("/srw/customer/register").permitAll()
                         .requestMatchers("/srw/owner/register", "/srw/employee/register").hasRole("OWNER")

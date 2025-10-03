@@ -4,10 +4,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.Authenticate
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LogoutResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LoginResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.service.CustomerService;
-import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
-import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
-import com.srinivasa.refrigeration.works.srw_springboot.service.UserCredentialService;
+import com.srinivasa.refrigeration.works.srw_springboot.service.*;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
@@ -15,11 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -32,6 +28,7 @@ public class LoginController {
     private final CustomerService customerService;
     private final OwnerService ownerService;
     private final EmployeeService employeeService;
+    private final TokenBlackListService tokenBlackListService;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -77,7 +74,7 @@ public class LoginController {
         }
         catch(Exception exception) {
             LoginResponseBody errorResponse = new LoginResponseBody(
-                    "Login failed " + exception.getMessage(),
+                    "Login failed: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "",
                     new AuthenticatedUserDTO(),
@@ -88,11 +85,35 @@ public class LoginController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponseBody> logout() {
-        LogoutResponseBody successResponse = new LogoutResponseBody(
-                "Logout success",
-                HttpStatus.OK.value()
-        );
-        return ResponseEntity.ok(successResponse);
+    public ResponseEntity<LogoutResponseBody> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                LogoutResponseBody errorResponse = new LogoutResponseBody(
+                        "Invalid or missing Authorization header",
+                        HttpStatus.BAD_REQUEST.value()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+
+            String token = authHeader.substring(7).trim();
+            Date expiration = jwtUtil.getExpirationDate(token);
+
+            tokenBlackListService.blacklistToken(token, expiration);
+            SecurityContextHolder.clearContext();
+            LogoutResponseBody successResponse = new LogoutResponseBody(
+                    "Logout success",
+                    HttpStatus.OK.value()
+            );
+            return ResponseEntity.ok(successResponse);
+        }
+        catch(Exception exception) {
+            LogoutResponseBody errorResponse = new LogoutResponseBody(
+                    "Logout failed: " + exception.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR.value()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 }
