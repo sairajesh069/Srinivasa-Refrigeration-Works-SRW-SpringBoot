@@ -33,7 +33,7 @@ public class NotificationService {
     public List<NotificationDTO> notificationList(String userId) {
         if(SecurityUtil.getCurrentUserType().equals("OWNER")) {
             return notificationRepository
-                    .findAll()
+                    .findAllByOrderByCreatedAtDesc()
                     .stream()
                     .map(notificationMapper::toDto)
                     .toList();

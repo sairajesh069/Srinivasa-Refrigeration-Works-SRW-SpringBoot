@@ -87,6 +87,13 @@ public class AccountRecoveryController {
             );
             return ResponseEntity.ok(successResponse);
         }
+        catch (UserValidationException exception) {
+            AccountRecoveryResponseBody errorResponse = new AccountRecoveryResponseBody(
+                    exception.getMessage(),
+                    HttpStatus.CONFLICT.value()
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        }
         catch (Exception exception) {
             AccountRecoveryResponseBody errorResponse = new AccountRecoveryResponseBody(
                     "Error: " + exception.getMessage(),

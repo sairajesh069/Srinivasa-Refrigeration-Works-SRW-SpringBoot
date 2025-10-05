@@ -7,7 +7,18 @@ import java.util.Map;
 
 public class NotificationMessages {
 
-    public static String userId = SecurityUtil.getCurrentUserId();
+    public static String getUserId() {
+        String UNKNOWN_USER_ID = "SRW001USER";
+        try {
+            String username = SecurityUtil.getCurrentUsername();
+            if (username != null && !username.isBlank()) {
+                return SecurityUtil.getCurrentUserId();
+            }
+            return UNKNOWN_USER_ID;
+        } catch (SecurityException e) {
+            return UNKNOWN_USER_ID;
+        }
+    }
 
     public static String buildComplaintRedirectUrl(String complaintId) {
         return (SecurityUtil.getCurrentUserType().equals("OWNER") ? "/all" : "/my")  + "-complaints?complaintId=" + complaintId;
@@ -37,8 +48,8 @@ public class NotificationMessages {
     }
 
     public static Map<String, Object> buildUserProfileUpdatedNotification(String updatedProfileId, LocalDateTime dateTime) {
-        boolean isSelfUpdate = userId.equals(updatedProfileId);
-        String notifiedToId = userId.equals(updatedProfileId) ? userId : updatedProfileId;
+        boolean isSelfUpdate = NotificationMessages.getUserId().equals(updatedProfileId);
+        String notifiedToId = NotificationMessages.getUserId().equals(updatedProfileId) ? NotificationMessages.getUserId() : updatedProfileId;
         return Map.of(
                 "userId", notifiedToId,
                 "title", "Profile Updated Successfully",
@@ -51,6 +62,20 @@ public class NotificationMessages {
                                     "The changes are now active on your account. " +
                                     "If this update seems incorrect, please <b><a href='%s'>contact</a></b> our support team immediately.",
                         buildUserProfileRedirectUrl(notifiedToId), notifiedToId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
+                ),
+                "type", NotificationType.INFO
+        );
+    }
+
+    public static Map<String, Object> buildPasswordUpdatedNotification(String userId, LocalDateTime dateTime) {
+        return Map.of(
+                "userId", userId,
+                "title", "Profile Password Updated Successfully",
+                "message", String.format(
+                        "Your profile <b>(User ID: <a href='%s'>%s</a>)</b> password has been updated successfully on <b>%s</b>. " +
+                                "The changes are now active on your account. " +
+                                "If you did not make this update, please <b><a href='%s'>contact</a></b> our support team immediately.",
+                        buildUserProfileRedirectUrl(userId), userId, CustomDateTimeFormatter.formatDateTime(dateTime), buildPhoneNumberRedirectUrl("+918555976776")
                 ),
                 "type", NotificationType.INFO
         );
@@ -72,7 +97,7 @@ public class NotificationMessages {
 
     public static Map<String, Object> buildUserProfileDeactivatedNotification(String updatedProfileId, LocalDateTime dateTime) {
         return Map.of(
-                "userId", userId,
+                "userId", NotificationMessages.getUserId(),
                 "title", "Profile Deactivated Successfully",
                 "message", String.format(
                         "Profile <b>(User ID: <a href='%s'>%s</a>)</b> was deactivated successfully on <b>%s</b>. " +
@@ -84,7 +109,7 @@ public class NotificationMessages {
 
     public static Map<String, Object> buildComplaintRegisteredNotification(String productType, String complaintId, LocalDateTime dateTime) {
         return Map.of(
-                "userId", userId,
+                "userId", NotificationMessages.getUserId(),
                 "title", "Service Request Approved",
                 "message", String.format(
                         "Your <b>%s (Complaint ID: <a href='%s'>%s</a>)</b> repair request submitted on <b>%s</b> has been approved. " +
@@ -97,9 +122,9 @@ public class NotificationMessages {
     }
 
     public static Map<String, Object> buildComplaintUpdatedNotification(String productType, String complaintId, String complaintOwnerId, LocalDateTime dateTime) {
-        boolean isSelfUpdate = userId.equals(complaintOwnerId);
+        boolean isSelfUpdate = NotificationMessages.getUserId().equals(complaintOwnerId);
         return Map.of(
-                "userId", isSelfUpdate ? userId : complaintOwnerId,
+                "userId", isSelfUpdate ? NotificationMessages.getUserId() : complaintOwnerId,
                 "title", "Complaint Updated Successfully",
                 "message", String.format(
                         isSelfUpdate
@@ -230,7 +255,7 @@ public class NotificationMessages {
 
     public static Map<String, Object> buildUnauthorizedAccessNotification(String resourceContext, LocalDateTime dateTime) {
         return Map.of(
-                "userId", userId,
+                "userId", NotificationMessages.getUserId(),
                 "title", "Unauthorized Resource Access",
                 "message", String.format(
                         "We detected an attempt to access <b>%s</b> that you are not authorized to view on <b>%s</b>. " +

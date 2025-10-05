@@ -7,6 +7,7 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ChangePasswo
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UserCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.UserCredentialRepository;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.NotificationMessages;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
@@ -27,6 +28,7 @@ public class UserCredentialService {
     private final UserCredentialRepository userCredentialRepository;
     private final UserCredentialMapper userCredentialMapper;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
@@ -93,11 +95,32 @@ public class UserCredentialService {
             }
             userCredentialRepository.updatePassword(changePasswordDTO.getUsername(),
                     passwordEncoder.encode(changePasswordDTO.getNewPassword()), LocalDateTime.now());
+            notificationService.saveNotification(
+                    NotificationMessages.buildPasswordUpdatedNotification(
+                            userCredential != null ? userCredential.getUserId() : "",
+                            LocalDateTime.now()
+                    )
+            );
         }
         else {
             AccountRecoveryDTO accountRecoveryDTO = (AccountRecoveryDTO) DTO;
-            userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(),
-                    passwordEncoder.encode(accountRecoveryDTO.getPassword()), LocalDateTime.now());
+            UserCredential userCredential = userCredentialRepository
+                    .findByIdentifier(accountRecoveryDTO.getLoginId())
+                    .orElse(null);
+            if(userCredential != null && passwordEncoder.matches(accountRecoveryDTO.getPassword(), userCredential.getPassword())) {
+                throw new UserValidationException("New password must be different from the old password.");
+            }
+            else {
+                userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(),
+                        passwordEncoder.encode(accountRecoveryDTO.getPassword()), LocalDateTime.now()
+                );
+                notificationService.saveNotification(
+                        NotificationMessages.buildPasswordUpdatedNotification(
+                                userCredential != null ? userCredential.getUserId() : "",
+                                LocalDateTime.now()
+                        )
+                );
+            }
         }
     }
 

@@ -13,4 +13,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
 
     @Query("SELECT n from Notification n WHERE n.userId = :userId OR n.userId = 'ALL_USERS' ORDER BY n.createdAt DESC")
     List<Notification> findAllByUserId(@Param("userId") String userId);
+
+    List<Notification> findAllByOrderByCreatedAtDesc();
 }
