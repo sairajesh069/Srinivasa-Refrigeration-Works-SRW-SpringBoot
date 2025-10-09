@@ -5,9 +5,10 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsD
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LogoutResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.LoginResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.*;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
+import com.srinivasa.refrigeration.works.srw_springboot.configuration.JwtUtil;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserType;
+import com.srinivasa.refrigeration.works.srw_springboot.exceptions.UserValidationException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,9 +35,10 @@ public class LoginController {
     private Long jwtExpiration;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseBody> login(@RequestBody CredentialsDTO credentials) {
+    public ResponseEntity<LoginResponseBody> login(@Valid @RequestBody CredentialsDTO credentials) {
         try {
             Map<String, String> userAuthDetails = userCredentialService.userValidationAndGetUserId(credentials);
+
             String userId = userAuthDetails.get("userId");
             String userType = userAuthDetails.get("userType");
             String token = jwtUtil.generateToken(
@@ -44,6 +46,7 @@ public class LoginController {
                     userId,
                     UserType.valueOf(userType)
             );
+
             AuthenticatedUserDTO authenticatedUserDTO = switch (userType) {
                 case "CUSTOMER" ->
                         (AuthenticatedUserDTO) customerService.getCustomerByIdentifier(userId, true);
@@ -53,6 +56,7 @@ public class LoginController {
                         (AuthenticatedUserDTO) employeeService.getEmployeeByIdentifier(userId, true);
                 default -> null;
             };
+
             LoginResponseBody successResponse = new LoginResponseBody(
                     "Login success",
                     HttpStatus.OK.value(),
@@ -102,6 +106,7 @@ public class LoginController {
 
             tokenBlackListService.blacklistToken(token, expiration);
             SecurityContextHolder.clearContext();
+
             LogoutResponseBody successResponse = new LogoutResponseBody(
                     "Logout success",
                     HttpStatus.OK.value()

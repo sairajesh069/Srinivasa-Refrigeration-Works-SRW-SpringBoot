@@ -1,7 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,43 +30,43 @@ public class Employee implements Serializable {
     private static final long serialVersionUID = 50L;
 
     @Id
-    @Column(name = "employee_reference", unique = true)
+    @Column(name = "employee_reference", unique = true, nullable = false, updatable = false)
     private String employeeReference;
 
-    @Column(name = "employee_id", unique = true)
+    @Column(name = "employee_id", unique = true, nullable = false, updatable = false)
     private String employeeId;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "gender")
+    @Column(name = "gender", nullable = false)
     private String gender;
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "email", unique = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "national_id_number", unique = true)
+    @Column(name = "national_id_number", unique = true, nullable = false)
     private String nationalIdNumber;
 
-    @Column(name = "designation")
+    @Column(name = "designation", nullable = false)
     private String designation;
 
-    @Column(name = "date_of_hire", updatable = false)
+    @Column(name = "date_of_hire", updatable = false, nullable = false)
     private final LocalDateTime dateOfHire = LocalDateTime.now();
 
-    @Column(name = "salary")
+    @Column(name = "salary", nullable = false)
     private Long salary;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -78,6 +78,7 @@ public class Employee implements Serializable {
     private LocalDateTime dateOfExit;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private UserStatus status;
+
 }

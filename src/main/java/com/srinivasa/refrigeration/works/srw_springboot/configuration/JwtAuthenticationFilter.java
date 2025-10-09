@@ -2,7 +2,6 @@ package com.srinivasa.refrigeration.works.srw_springboot.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.service.TokenBlackListService;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +56,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 username = jwtUtil.extractUsername(jwt);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 logger.warn("Failed to extract username from JWT: " + e.getMessage());
                 // Invalid token, continue without authentication
             }
@@ -68,6 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 try {
                     String userId = jwtUtil.extractUserId(jwt);
                     String userType = jwtUtil.extractUserType(jwt).toString();
+
                     List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + userType));
 
                     UsernamePasswordAuthenticationToken authenticationToken =
@@ -80,7 +81,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     authenticationToken.setDetails(details);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     logger.warn("Failed to extract user details from JWT: " + e.getMessage());
                 }
             }

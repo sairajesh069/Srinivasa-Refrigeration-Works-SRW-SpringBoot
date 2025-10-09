@@ -1,7 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,38 +30,38 @@ public class Owner implements Serializable {
     private static final long serialVersionUID = 40L;
 
     @Id
-    @Column(name = "owner_reference", unique = true)
+    @Column(name = "owner_reference", unique = true, updatable = false, nullable = false)
     private String ownerReference;
 
-    @Column(name = "owner_id", unique = true)
+    @Column(name = "owner_id", unique = true, updatable = false, nullable = false)
     private String ownerId;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "gender")
+    @Column(name = "gender", nullable = false)
     private String gender;
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "email", unique = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "national_id_number", unique = true)
+    @Column(name = "national_id_number", unique = true, nullable = false)
     private String nationalIdNumber;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private final LocalDateTime createdAt = LocalDateTime.now();
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -69,6 +69,7 @@ public class Owner implements Serializable {
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private UserStatus status;
+
 }

@@ -4,9 +4,9 @@ import com.srinivasa.refrigeration.works.srw_springboot.entity.Notification;
 import com.srinivasa.refrigeration.works.srw_springboot.mapper.NotificationMapper;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.NotificationDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.NotificationRepository;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.NotificationMessages;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.NotificationType;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationMessages;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationType;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,11 +26,12 @@ public class NotificationService {
 
     @Cacheable(
         value = "notifications",
-        key = "T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserType().equals('OWNER') " +
+        key = "T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserType().equals('OWNER') " +
                 "? 'notification_list' " +
-                ": ('triggered_to-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId())"
+                ": ('triggered_to-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId())"
     )
     public List<NotificationDTO> notificationList(String userId) {
+
         if(SecurityUtil.getCurrentUserType().equals("OWNER")) {
             return notificationRepository
                     .findAllByOrderByCreatedAtDesc()
@@ -61,6 +62,7 @@ public class NotificationService {
     @Transactional
     @CacheEvict(cacheNames = "notifications", allEntries = true)
     public void saveNotification(Map<String, Object> notificationData) {
+
         Notification notification = new Notification(
                 (String) notificationData.get("userId"),
                 (String) notificationData.get("title"),

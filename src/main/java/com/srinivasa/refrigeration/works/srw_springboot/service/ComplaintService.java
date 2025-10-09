@@ -7,6 +7,10 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFee
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateComplaintStateDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.ComplaintRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintState;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationMessages;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserIdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -31,13 +35,16 @@ public class ComplaintService {
     @Transactional
     @CacheEvict(cacheNames = "complaints", allEntries = true)
     public ComplaintDTO registerComplaint(ComplaintDTO complaintDTO) {
+
         Complaint complaint = complaintMapper.toEntity(complaintDTO);
         complaint.setComplaintReference(UserIdGenerator.generateUniqueId(complaintDTO.getContactNumber()));
         complaint.setComplaintId("SRW" + complaint.getComplaintReference() + "COMP");
         complaint.setContactNumber(PhoneNumberFormatter.formatPhoneNumber(complaint.getContactNumber()));
         complaint.setStatus(ComplaintStatus.PENDING);
         complaint.setComplaintState(ComplaintState.SUBMITTED);
+
         complaintRepository.save(complaint);
+
         notificationService.saveNotification(
                 NotificationMessages.buildComplaintRegisteredNotification(
                         complaint.getProductType(),
@@ -45,11 +52,13 @@ public class ComplaintService {
                         LocalDateTime.now()
                 )
         );
+
         return complaintMapper.toDto(complaint);
     }
 
-    @Cacheable(value = "complaints", key = "'raised_by-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "complaints", key = "'raised_by-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getComplaintsRaisedBy(String userId) {
+
         if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
                     .findByBookedById(userId)
@@ -77,11 +86,12 @@ public class ComplaintService {
                 .toList();
     }
 
-    @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "complaints", key = "'assigned_to-' + #employeeId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getComplaintsAssignedTo(String employeeId) {
+
         if(accessCheck.canAccessComplaints(employeeId)) {
-            List<Complaint> complaints = complaintRepository.findByTechnicianDetailsEmployeeId(employeeId);
-            return complaints
+            return complaintRepository
+                    .findByTechnicianDetailsEmployeeId(employeeId)
                     .stream()
                     .map(complaintMapper::toDto)
                     .toList();
@@ -97,10 +107,13 @@ public class ComplaintService {
         }
     }
 
-    @Cacheable(value = "complaint", key = "'complaint-' + #complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "complaint", key = "'complaint-' + #complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
     public ComplaintDTO getComplaintById(String complaintId) {
+
         Complaint complaint = complaintRepository.findByComplaintId(complaintId);
+
         String assignedToId = complaint.getTechnicianDetails() != null ? complaint.getTechnicianDetails().getEmployeeId() : "";
+
         if(accessCheck.canAccessComplaint(complaint.getBookedById(), assignedToId)) {
             return complaintMapper.toDto(complaint);
         }
@@ -118,27 +131,33 @@ public class ComplaintService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "complaint", key = "'update-' + #complaintDTO.complaintId")
     )
     public ComplaintDTO updateComplaint(ComplaintDTO complaintDTO) {
+
         boolean isInfoUpdate = true;
+
         Complaint complaint = complaintMapper.toEntity(complaintDTO);
         complaint.setComplaintReference(complaintDTO.getComplaintId().replaceAll("\\D", "").trim());
         complaint.setComplaintId(complaintDTO.getComplaintId());
         complaint.setContactNumber(PhoneNumberFormatter.formatPhoneNumber(complaint.getContactNumber()));
         complaint.setUpdatedAt(LocalDateTime.now());
+
         if(complaintDTO.getTechnicianDetails().getEmployeeId().isEmpty()) {
             complaint.setComplaintState(ComplaintState.SUBMITTED);
         }
+
         if(!complaintDTO.getTechnicianDetails().getPhoneNumber().isEmpty()) {
             complaint.getTechnicianDetails().setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(
                     complaintDTO.getTechnicianDetails().getPhoneNumber())
             );
         }
+
         if(complaintDTO.getStatus().equals(ComplaintStatus.IN_PROGRESS)) {
             isInfoUpdate = false;
+
             notificationService.saveNotification(
                     NotificationMessages.buildTechnicianEnRouteNotification(
                             complaint.getBookedById(),
@@ -151,10 +170,14 @@ public class ComplaintService {
                     )
             );
         }
+
         if (!complaintDTO.getTechnicianDetails().getEmployeeId().isEmpty()) {
             isInfoUpdate = false;
+
             if (complaintDTO.getComplaintState().equals(ComplaintState.SUBMITTED)) {
+
                 complaint.setComplaintState(ComplaintState.ASSIGNED);
+
                 notificationService.saveNotification(
                         NotificationMessages.buildComplaintAssignedNotification(
                                 complaint.getTechnicianDetails().getEmployeeId(),
@@ -165,6 +188,7 @@ public class ComplaintService {
                                 LocalDateTime.now()
                         )
                 );
+
                 notificationService.saveNotification(
                         NotificationMessages.buildTechnicianAssignedNotification(
                                 complaint.getBookedById(),
@@ -176,9 +200,12 @@ public class ComplaintService {
                         )
                 );
             }
+
             if(complaintDTO.getStatus().equals(ComplaintStatus.RESOLVED)) {
+
                 complaint.setComplaintState(ComplaintState.CLOSED);
                 complaint.setClosedAt(LocalDateTime.now());
+
                 notificationService.saveNotification(
                         NotificationMessages.buildComplaintResolvedNotification(
                                 complaint.getBookedById(),
@@ -188,6 +215,7 @@ public class ComplaintService {
                                 complaint.getTechnicianDetails().getFullName()
                         )
                 );
+
                 notificationService.saveNotification(
                         NotificationMessages.buildPendingFeedbackNotification(
                                 complaint.getBookedById(),
@@ -197,8 +225,10 @@ public class ComplaintService {
                 );
             }
         }
+
         if(!(complaintDTO.getInitialAssigneeId() == null || complaintDTO.getInitialAssigneeId().isEmpty()) && !complaintDTO.getTechnicianDetails().getEmployeeId().equals(complaintDTO.getInitialAssigneeId())) {
             isInfoUpdate = false;
+
             notificationService.saveNotification(
                     NotificationMessages.buildTechnicianReAssignedNotification(
                             complaint.getBookedById(),
@@ -208,6 +238,7 @@ public class ComplaintService {
                             complaint.getTechnicianDetails().getPhoneNumber()
                     )
             );
+
             notificationService.saveNotification(
                     NotificationMessages.buildComplaintAssignedNotification(
                             complaint.getTechnicianDetails().getEmployeeId(),
@@ -218,6 +249,7 @@ public class ComplaintService {
                             LocalDateTime.now()
                     )
             );
+
             notificationService.saveNotification(
                     NotificationMessages.buildComplaintTransferedNotification(
                             complaintDTO.getInitialAssigneeId(),
@@ -229,7 +261,9 @@ public class ComplaintService {
                     )
             );
         }
+
         complaintRepository.save(complaint);
+
         if(isInfoUpdate) {
             notificationService.saveNotification(
                     NotificationMessages.buildComplaintUpdatedNotification(
@@ -240,6 +274,7 @@ public class ComplaintService {
                     )
             );
         }
+
         ComplaintDTO updatedComplaintDTO = complaintMapper.toDto(complaint);
         updatedComplaintDTO.setCreatedAt(complaintDTO.getCreatedAt());
         return updatedComplaintDTO;
@@ -248,17 +283,17 @@ public class ComplaintService {
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
-            },
-            put = @CachePut(value = "complaint", key = "'user_feedback-' + #complaintFeedbackDTO.complaintId")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #complaintFeedbackDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
+            }
     )
     public void saveUserFeedback(ComplaintFeedbackDTO complaintFeedbackDTO) {
         complaintRepository.saveUserFeedback(complaintFeedbackDTO.getComplaintId(),
                 complaintFeedbackDTO.getCustomerFeedback(), LocalDateTime.now());
     }
 
-    @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+    @Cacheable(value = "complaints", key = "'resolved_complaint_list-' + #userId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
     public List<ComplaintDTO> getResolvedComplaints(String userId) {
+
         if(accessCheck.canAccessComplaints(userId)) {
             return complaintRepository
                     .findByBookedByIdAndStatus(userId, ComplaintStatus.RESOLVED)
@@ -275,19 +310,22 @@ public class ComplaintService {
             );
             throw new SecurityException("Unauthorized access: Attempt to fetch restricted complaints");
         }
+
     }
 
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = "complaints", allEntries = true),
-                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #updateComplaintStateDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
-            },
-            put = @CachePut(value = "complaint", key = "'update_state-' + #updateComplaintStateDTO.complaintId")
+                    @CacheEvict(cacheNames = "complaint", key = "'complaint-' + #updateComplaintStateDTO.complaintId + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
+            }
     )
     public void updateState(UpdateComplaintStateDTO updateComplaintStateDTO) {
+
         if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo())) {
+
             complaintRepository.updateState(updateComplaintStateDTO.getComplaintId(),
                     updateComplaintStateDTO.getComplaintState(), LocalDateTime.now());
+
             if(updateComplaintStateDTO.getComplaintState().equals(ComplaintState.REOPENED)) {
                 notificationService.saveNotification(
                         NotificationMessages.buildComplaintReopenedNotification(

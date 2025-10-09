@@ -3,36 +3,41 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.EmployeeCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.FetchUsersResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UsersResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.EmployeeService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.employeeGroups.EmployeeRegisterGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.employeeGroups.EmployeeUpdateGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.fetchEmployeesContextValidation.ValidFetchEmployeesContext;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.userIdValidation.ValidUserId;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/srw/employee")
 @RequiredArgsConstructor
+@Validated
 public class EmployeeController {
 
     private final EmployeeService employeeService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegisterResponseBody<EmployeeDTO>> register(@RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
-        EmployeeDTO employeeDTO = employeeCredentialDTO.getEmployeeDTO();
+    public ResponseEntity<UserResponseBody<EmployeeDTO>> register(
+            @Validated(EmployeeRegisterGroup.class) @RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
+
         try {
-            employeeDTO = employeeService.addEmployee(employeeCredentialDTO);
-            UserRegisterResponseBody<EmployeeDTO> successResponse = new UserRegisterResponseBody<>(
+            EmployeeDTO employeeDTO = employeeService.addEmployee(employeeCredentialDTO);
+
+            UserResponseBody<EmployeeDTO> successResponse = new UserResponseBody<>(
                     "Registered successfully. Please login",
                     HttpStatus.OK.value(),
                     employeeDTO
@@ -40,74 +45,42 @@ public class EmployeeController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
+            UserResponseBody<EmployeeDTO> errorResponse = new UserResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("employees", exception),
                     HttpStatus.CONFLICT.value(),
-                    employeeDTO
+                    new EmployeeDTO()
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch (UserValidationException exception) {
-            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.CONFLICT.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch (IllegalArgumentException exception) {
-            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.NOT_ACCEPTABLE.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserRegisterResponseBody<EmployeeDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseBody<EmployeeDTO>> fetchProfile(@RequestParam("employeeId") String employeeId) {
-        EmployeeDTO employeeDTO = new EmployeeDTO();
-        try {
-            employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false);
-            UserProfileResponseBody<EmployeeDTO> successResponse = new UserProfileResponseBody<>(
-                    "Employee: " + employeeId +  " profile fetched successfully.",
-                    HttpStatus.OK.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            UserProfileResponseBody<EmployeeDTO> errorResponse = new UserProfileResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserProfileResponseBody<EmployeeDTO> errorResponse = new UserProfileResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    employeeDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UserResponseBody<EmployeeDTO>> fetchProfile(
+            @RequestParam("employeeId")
+            @ValidUserId(
+                    requiredMessage = "Employee ID is required.",
+                    message = "Invalid employee ID format."
+            )
+            String employeeId) {
+
+        EmployeeDTO employeeDTO = (EmployeeDTO) employeeService.getEmployeeByIdentifier(employeeId, false);
+
+        UserResponseBody<EmployeeDTO> successResponse = new UserResponseBody<>(
+                "Employee: " + employeeId +  " profile fetched successfully.",
+                HttpStatus.OK.value(),
+                employeeDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update-profile")
-    public ResponseEntity<UserProfileUpdateResponseBody<EmployeeDTO>> updateProfile(@RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
+    public ResponseEntity<UserResponseBody<EmployeeDTO>> updateProfile(
+            @Validated(EmployeeUpdateGroup.class) @RequestBody EmployeeCredentialDTO employeeCredentialDTO) {
+
         try {
             EmployeeDTO updatedEmployeeDTO = employeeService.updateEmployee(employeeCredentialDTO);
-            UserProfileUpdateResponseBody<EmployeeDTO> successResponse = new UserProfileUpdateResponseBody<>(
+
+            UserResponseBody<EmployeeDTO> successResponse = new UserResponseBody<>(
                     "Profile updated successfully.",
                     HttpStatus.OK.value(),
                     updatedEmployeeDTO
@@ -115,92 +88,53 @@ public class EmployeeController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+            UserResponseBody<EmployeeDTO> errorResponse = new UserResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("employees", exception),
                     HttpStatus.CONFLICT.value(),
                     employeeCredentialDTO.getEmployeeDTO()
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-        catch (UserValidationException exception) {
-            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.CONFLICT.value(),
-                    employeeCredentialDTO.getEmployeeDTO()
-            );
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserProfileUpdateResponseBody<EmployeeDTO> errorResponse = new UserProfileUpdateResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    employeeCredentialDTO.getEmployeeDTO()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
     }
 
     @GetMapping("/active-list")
-    public ResponseEntity<FetchUsersResponseBody<?>> getActiveEmployeeList(@RequestParam("context") String context) {
-        try {
-            List<?> activeEmployeesInfo = employeeService.getActiveEmployeeList(context);
-            FetchUsersResponseBody<?> successResponse = new FetchUsersResponseBody<>(
-                    "Active employee profiles fetched successfully.",
-                    HttpStatus.OK.value(),
-                    activeEmployeesInfo
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            FetchUsersResponseBody<EmployeeDTO> errorResponse = new FetchUsersResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UsersResponseBody<?>> getActiveEmployeeList(@RequestParam("context") @ValidFetchEmployeesContext String context) {
+
+        List<?> activeEmployeesInfo = employeeService.getActiveEmployeeList(context);
+
+        UsersResponseBody<?> successResponse = new UsersResponseBody<>(
+                "Active employee profiles fetched successfully.",
+                HttpStatus.OK.value(),
+                activeEmployeesInfo
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @GetMapping("/list")
-    public ResponseEntity<FetchUsersResponseBody<EmployeeDTO>> fetchAllEmployees() {
-        try {
-            List<EmployeeDTO> employeesDTO = employeeService.getEmployeeList();
-            FetchUsersResponseBody<EmployeeDTO> successResponse = new FetchUsersResponseBody<>(
-                    "List of all employees fetched successfully.",
-                    HttpStatus.OK.value(),
-                    employeesDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            FetchUsersResponseBody<EmployeeDTO> errorResponse = new FetchUsersResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UsersResponseBody<EmployeeDTO>> fetchAllEmployees() {
+
+        List<EmployeeDTO> employeesDTO = employeeService.getEmployeeList();
+
+        UsersResponseBody<EmployeeDTO> successResponse = new UsersResponseBody<>(
+                "List of all employees fetched successfully.",
+                HttpStatus.OK.value(),
+                employeesDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update-status")
-    public ResponseEntity<UserProfileResponseBody<UpdateUserStatusDTO>> updateStatus(@RequestBody UpdateUserStatusDTO updateUserStatusDTO) {
-        try {
-            employeeService.updateStatus(updateUserStatusDTO);
-            UserProfileResponseBody<UpdateUserStatusDTO> successResponse = new UserProfileResponseBody<>(
-                    updateUserStatusDTO.getUserStatus().equals(UserStatus.ACTIVE) ? "Activated " : "Deactivated "
-                            + updateUserStatusDTO.getUserId() + " successfully.",
-                    HttpStatus.OK.value(),
-                    updateUserStatusDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            UserProfileResponseBody<UpdateUserStatusDTO> errorResponse = new UserProfileResponseBody<>(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    updateUserStatusDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UserResponseBody<UpdateUserStatusDTO>> updateStatus(
+            @Valid @RequestBody UpdateUserStatusDTO updateUserStatusDTO) {
+
+        employeeService.updateStatus(updateUserStatusDTO);
+
+        UserResponseBody<UpdateUserStatusDTO> successResponse = new UserResponseBody<>(
+                updateUserStatusDTO.getUserStatus().equals(UserStatus.ACTIVE) ? "Activated " : "Deactivated "
+                        + updateUserStatusDTO.getUserId() + " successfully.",
+                HttpStatus.OK.value(),
+                updateUserStatusDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 }

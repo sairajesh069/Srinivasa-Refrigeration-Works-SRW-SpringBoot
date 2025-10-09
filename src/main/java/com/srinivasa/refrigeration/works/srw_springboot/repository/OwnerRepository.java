@@ -1,7 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.repository;
 
 import com.srinivasa.refrigeration.works.srw_springboot.entity.Owner;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

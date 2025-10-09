@@ -1,7 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.payload.dto;
 
-import com.srinivasa.refrigeration.works.srw_springboot.utils.NotificationType;
-import jakarta.persistence.Column;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationType;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.userIdValidation.ValidUserId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +21,10 @@ public class NotificationDTO implements Serializable {
     private static final long serialVersionUID = 71L;
 
     private String notificationId;
+
+    @ValidUserId
     private String userId;
+
     private String title;
     private String message;
     private NotificationType type;

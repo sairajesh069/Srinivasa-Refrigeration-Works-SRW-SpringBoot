@@ -8,6 +8,10 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CustomerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.CustomerRepository;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.*;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationMessages;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserIdGenerator;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,29 +36,35 @@ public class CustomerService {
     @Transactional
     @CacheEvict(cacheNames = "customers", allEntries = true)
     public CustomerDTO addCustomer(CustomerCredentialDTO customerCredentialDTO) {
+
         Customer customer = customerMapper.toEntity(customerCredentialDTO.getCustomerDTO());
         customer.setCustomerReference(UserIdGenerator.generateUniqueId(customer.getPhoneNumber()));
         customer.setCustomerId("SRW" + customer.getCustomerReference() + "CUST");
         customer.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(customer.getPhoneNumber()));
         customer.setStatus(UserStatus.ACTIVE);
+
         customerRepository.save(customer);
         userCredentialService.saveCredential(customerCredentialDTO.getUserCredentialDTO(), customer.getCustomerId(), UserType.CUSTOMER);
+
         notificationService.saveNotification(
                 NotificationMessages.buildWelcomeNotification(
                         customer.getFirstName() + " " + customer.getLastName(),
                         customer.getCustomerId()
                 )
         );
+
         return customerMapper.toDto(customer);
     }
 
     @Cacheable(value = "customer",
             key = "#isAuthenticating ? " +
                     "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating : " +
-                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+                    "'fetch-' + #identifier + '-isAuthenticating-' + #isAuthenticating + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
     public Object getCustomerByIdentifier(String identifier, boolean isAuthenticating) {
+
         Customer customer = customerRepository.findByIdentifier(
                 identifier.matches("\\d{10}") ? PhoneNumberFormatter.formatPhoneNumber(identifier) : identifier);
+
         if(isAuthenticating) {
             return new AuthenticatedUserDTO(
                     customer.getCustomerId(),
@@ -66,7 +76,8 @@ public class CustomerService {
         else {
             if (accessCheck.canAccessProfile(customer.getCustomerId())) {
                 return customerMapper.toDto(customer);
-            } else {
+            }
+            else {
                 notificationService.saveNotification(
                         NotificationMessages.buildUnauthorizedAccessNotification(
                                 "another customer profile",
@@ -83,27 +94,33 @@ public class CustomerService {
             evict = {
                     @CacheEvict(cacheNames = "customers", allEntries = true),
                     @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + '-isAuthenticating-' + true"),
-                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #customerCredentialDTO.customerDTO.customerId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
             },
             put = @CachePut(value = "customer", key = "'update-' + #customerCredentialDTO.customerDTO.customerId")
     )
     public CustomerDTO updateCustomer(CustomerCredentialDTO customerCredentialDTO) {
+
         CustomerDTO customerDTO = customerCredentialDTO.getCustomerDTO();
+
         Customer customer = customerMapper.toEntity(customerDTO);
         customer.setCustomerReference(customerDTO.getCustomerId().replaceAll("\\D", "").trim());
         customer.setCustomerId(customerDTO.getCustomerId());
         customer.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(customer.getPhoneNumber()));
         customer.setUpdatedAt(LocalDateTime.now());
+
         if(customerCredentialDTO.getUserCredentialDTO().getUserId() != null) {
             userCredentialService.updateDetails(customerCredentialDTO.getUserCredentialDTO());
         }
+
         customerRepository.save(customer);
+
         notificationService.saveNotification(
                 NotificationMessages.buildUserProfileUpdatedNotification(
                         customer.getCustomerId(),
                         LocalDateTime.now()
                 )
         );
+
         CustomerDTO updatedCustomerDTO = customerMapper.toDto(customer);
         updatedCustomerDTO.setCreatedAt(customerDTO.getCreatedAt());
         return updatedCustomerDTO;
@@ -123,16 +140,18 @@ public class CustomerService {
             evict = {
                     @CacheEvict(cacheNames = "customers", allEntries = true),
                     @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + true"),
-                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.SecurityUtil).getCurrentUserId()")
-            },
-            put = @CachePut(value = "customer", key = "#updateUserStatusDTO.userStatus + '-' + #updateUserStatusDTO.userId")
+                    @CacheEvict(cacheNames = "customer", key = "'fetch-' + #updateUserStatusDTO.userId + '-isAuthenticating-' + false + '-user-' + T(com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.SecurityUtil).getCurrentUserId()")
+            }
     )
     public void updateStatus(UpdateUserStatusDTO updateUserStatusDTO) {
+
         String userId = updateUserStatusDTO.getUserId();
         UserStatus status = updateUserStatusDTO.getUserStatus();
         int enabled = status.equals(UserStatus.ACTIVE) ? 1 : 0;
+
         customerRepository.updateStatusById(userId, status, LocalDateTime.now());
         userCredentialService.updateUserStatus(userId, (byte) enabled);
+
         notificationService.saveNotification(status.equals(UserStatus.ACTIVE)
                 ? NotificationMessages.buildUserProfileActivatedNotification(userId, LocalDateTime.now())
                 : NotificationMessages.buildUserProfileDeactivatedNotification(userId, LocalDateTime.now())

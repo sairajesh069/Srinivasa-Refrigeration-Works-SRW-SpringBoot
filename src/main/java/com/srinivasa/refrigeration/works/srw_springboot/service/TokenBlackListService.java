@@ -20,13 +20,15 @@ public class TokenBlackListService {
     }
 
     public void blacklistToken(String token, Date expiration) {
+
         long ttl = expiration.getTime() - System.currentTimeMillis();
 
         if (ttl > 0) {
             String key = BLACKLIST_PREFIX + token;
             redisTemplate.opsForValue().set(key, "revoked", ttl, TimeUnit.MILLISECONDS);
             log.info("Token blacklisted successfully with TTL: {} ms", ttl);
-        } else {
+        }
+        else {
             log.warn("Token already expired, no need to blacklist");
         }
     }

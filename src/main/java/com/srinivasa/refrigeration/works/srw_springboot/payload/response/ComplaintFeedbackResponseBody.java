@@ -2,20 +2,16 @@ package com.srinivasa.refrigeration.works.srw_springboot.payload.response;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ComplaintFeedbackDTO;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class ComplaintFeedbackResponseBody {
+@EqualsAndHashCode(callSuper = true)
+public class ComplaintFeedbackResponseBody extends BaseResponseBody {
+
+    private ComplaintFeedbackDTO complaintFeedbackDTO;
 
     public ComplaintFeedbackResponseBody(String message, int status, ComplaintFeedbackDTO complaintFeedbackDTO) {
-        this.message = message;
-        this.status = status;
+        super(message, status);
         this.complaintFeedbackDTO = complaintFeedbackDTO;
     }
-
-    private String message;
-    private ComplaintFeedbackDTO complaintFeedbackDTO;
-    private int status;
-    private LocalDateTime timeStamp = LocalDateTime.now();
 }

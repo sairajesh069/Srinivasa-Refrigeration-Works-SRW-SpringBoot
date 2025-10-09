@@ -1,8 +1,8 @@
 package com.srinivasa.refrigeration.works.srw_springboot.repository;
 
 import com.srinivasa.refrigeration.works.srw_springboot.entity.Complaint;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintState;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -35,9 +35,9 @@ public interface ComplaintRepository extends JpaRepository<Complaint, String> {
     UPDATE Complaint c 
        SET c.complaintState = :complaintState,
            c.updatedAt = :timestamp,
-           c.closedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState.CLOSED 
+           c.closedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintState.CLOSED 
                              THEN :timestamp ELSE c.closedAt END,
-           c.reopenedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.ComplaintState.REOPENED 
+           c.reopenedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintState.REOPENED 
                                THEN :timestamp ELSE c.reopenedAt END
      WHERE c.complaintId = :complaintId
 """)

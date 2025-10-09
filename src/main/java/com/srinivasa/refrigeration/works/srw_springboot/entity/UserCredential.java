@@ -1,7 +1,7 @@
 package com.srinivasa.refrigeration.works.srw_springboot.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserType;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,25 +33,25 @@ public class UserCredential implements UserDetails, Serializable {
     private static final long serialVersionUID = 30L;
 
     @Id
-    @Column(name = "user_id", unique = true)
+    @Column(name = "user_id", unique = true, updatable = false, nullable = false)
     private String userId;
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "email", unique = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "username", unique = true)
+    @Column(name = "username", unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "agreed_to_terms")
+    @Column(name = "agreed_to_terms", nullable = false)
     private short agreedToTerms;
 
-    @Column(name = "enabled")
+    @Column(name = "enabled", nullable = false)
     private short enabled;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -59,7 +59,7 @@ public class UserCredential implements UserDetails, Serializable {
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_type")
+    @Column(name = "user_type", nullable = false)
     private UserType userType;
 
     @Override
@@ -88,4 +88,5 @@ public class UserCredential implements UserDetails, Serializable {
     public boolean isEnabled() {
         return this.enabled == 1;
     }
+
 }

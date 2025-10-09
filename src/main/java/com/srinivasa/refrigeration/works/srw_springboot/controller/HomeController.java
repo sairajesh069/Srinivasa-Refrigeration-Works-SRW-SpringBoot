@@ -22,7 +22,7 @@ public class HomeController {
         }
         catch(Exception exception) {
             HomeResponseBody errorResponse = new HomeResponseBody(
-                    "Error connecting to srw-react",
+                    "Error connecting to srw-react: " + exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value()
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

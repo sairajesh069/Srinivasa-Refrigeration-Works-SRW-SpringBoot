@@ -6,27 +6,37 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateCompla
 import com.srinivasa.refrigeration.works.srw_springboot.payload.response.*;
 import com.srinivasa.refrigeration.works.srw_springboot.service.ComplaintService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.complaintGroups.ComplaintRegisterGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.complaintGroups.ComplaintUpdateGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.complaintGroups.TechnicianDetailsGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.complaintIdValidation.ValidComplaintId;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.userIdValidation.ValidUserId;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/srw/complaint")
 @RequiredArgsConstructor
+@Validated
 public class ComplaintController {
 
     private final ComplaintService complaintService;
 
     @PostMapping("/register")
-    public ResponseEntity<ComplaintRegisterResponseBody> registerComplaint(@RequestBody ComplaintDTO complaintDTO) {
+    public ResponseEntity<ComplaintResponseBody<ComplaintDTO>> registerComplaint(
+            @Validated(ComplaintRegisterGroup.class) @RequestBody ComplaintDTO complaintDTO) {
+
         try {
             ComplaintDTO registeredComplaint = complaintService.registerComplaint(complaintDTO);
-            ComplaintRegisterResponseBody successResponse = new ComplaintRegisterResponseBody(
+
+            ComplaintResponseBody<ComplaintDTO> successResponse = new ComplaintResponseBody<ComplaintDTO>(
                     "Complaint registered successfully.",
                     HttpStatus.OK.value(),
                     registeredComplaint
@@ -34,136 +44,84 @@ public class ComplaintController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            ComplaintRegisterResponseBody errorResponse = new ComplaintRegisterResponseBody(
+            ComplaintResponseBody<ComplaintDTO> errorResponse = new ComplaintResponseBody<ComplaintDTO>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("complaints", exception),
                     HttpStatus.CONFLICT.value(),
                     complaintDTO
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-        catch(Exception exception) {
-            ComplaintRegisterResponseBody errorResponse = new ComplaintRegisterResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    complaintDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
     }
 
     @GetMapping("/raised-by")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchMyComplaints(@RequestParam("userId") String userId) {
-        try {
-            List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId);
-            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
-                    "Fetched complaints registered by " + userId + " successfully.",
-                    HttpStatus.OK.value(),
-                    myComplaints
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintsResponseBody> fetchMyComplaints(@RequestParam("userId") @ValidUserId String userId) {
+
+        List<ComplaintDTO> myComplaints = complaintService.getComplaintsRaisedBy(userId);
+
+        ComplaintsResponseBody successResponse = new ComplaintsResponseBody(
+                "Fetched complaints registered by " + userId + " successfully.",
+                HttpStatus.OK.value(),
+                myComplaints
+        );
+        return ResponseEntity.ok(successResponse);
+
     }
 
     @GetMapping("/list")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchAllComplaints() {
-        try {
-            List<ComplaintDTO> allComplaints = complaintService.getComplaintList();
-            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
-                    "Fetched complaints successfully.",
-                    HttpStatus.OK.value(),
-                    allComplaints
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintsResponseBody> fetchAllComplaints() {
+
+        List<ComplaintDTO> allComplaints = complaintService.getComplaintList();
+
+        ComplaintsResponseBody successResponse = new ComplaintsResponseBody(
+                "Fetched complaints successfully.",
+                HttpStatus.OK.value(),
+                allComplaints
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @GetMapping("/assigned-to")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchComplaintsAssignedTo(@RequestParam("employeeId") String employeeId) {
-        try {
-            List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId);
-            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
-                    "Fetched complaints assigned to " + employeeId + " successfully.",
-                    HttpStatus.OK.value(),
-                    assignedComplaints
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintsResponseBody> fetchComplaintsAssignedTo(
+            @RequestParam("employeeId")
+            @ValidUserId(
+                    requiredMessage = "Employee ID is required.",
+                    message = "Invalid employee ID format."
+            )
+            String employeeId) {
+
+        List<ComplaintDTO> assignedComplaints = complaintService.getComplaintsAssignedTo(employeeId);
+
+        ComplaintsResponseBody successResponse = new ComplaintsResponseBody(
+                "Fetched complaints assigned to " + employeeId + " successfully.",
+                HttpStatus.OK.value(),
+                assignedComplaints
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @GetMapping("/by-id")
-    public ResponseEntity<ComplaintFetchResponseBody> fetchComplaintById(@RequestParam("complaintId") String complaintId) {
-        try {
-            ComplaintDTO complaint = complaintService.getComplaintById(complaintId);
-            ComplaintFetchResponseBody successResponse = new ComplaintFetchResponseBody(
-                    "Fetched complaint " + complaintId + " details successfully.",
-                    HttpStatus.OK.value(),
-                    complaint
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    new ComplaintDTO()
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            ComplaintFetchResponseBody errorResponse = new ComplaintFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    new ComplaintDTO()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintResponseBody<ComplaintDTO>> fetchComplaintById(
+            @RequestParam("complaintId") @ValidComplaintId String complaintId) {
+
+        ComplaintDTO complaint = complaintService.getComplaintById(complaintId);
+
+        ComplaintResponseBody<ComplaintDTO> successResponse = new ComplaintResponseBody<ComplaintDTO>(
+                "Fetched complaint " + complaintId + " details successfully.",
+                HttpStatus.OK.value(),
+                complaint
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ComplaintUpdateResponseBody<ComplaintDTO>> updateComplaint(@RequestBody ComplaintDTO complaintDTO) {
+    public ResponseEntity<ComplaintResponseBody<ComplaintDTO>> updateComplaint(
+            @Validated({ComplaintUpdateGroup.class, TechnicianDetailsGroup.class})
+            @RequestBody ComplaintDTO complaintDTO) {
+
         try {
             ComplaintDTO updatedComplaint = complaintService.updateComplaint(complaintDTO);
-            ComplaintUpdateResponseBody<ComplaintDTO> successResponse = new ComplaintUpdateResponseBody<>(
+
+            ComplaintResponseBody<ComplaintDTO> successResponse = new ComplaintResponseBody<>(
                     "Complaint updated successfully.",
                     HttpStatus.OK.value(),
                     updatedComplaint
@@ -171,91 +129,52 @@ public class ComplaintController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            ComplaintUpdateResponseBody<ComplaintDTO> errorResponse = new ComplaintUpdateResponseBody<>(
+            ComplaintResponseBody<ComplaintDTO> errorResponse = new ComplaintResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("complaints", exception),
                     HttpStatus.CONFLICT.value(),
                     complaintDTO
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-        catch(Exception exception) {
-            ComplaintUpdateResponseBody<ComplaintDTO> errorResponse = new ComplaintUpdateResponseBody<>(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    complaintDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
     }
 
     @GetMapping("/resolved-list")
-    public ResponseEntity<ComplaintsFetchResponseBody> fetchResolvedComplaints(@RequestParam("userId") String userId) {
-        try {
-            List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId);
-            ComplaintsFetchResponseBody successResponse = new ComplaintsFetchResponseBody(
-                    "Fetched list of resolved complaints successfully.",
-                    HttpStatus.OK.value(),
-                    resolvedComplaints
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            ComplaintsFetchResponseBody errorResponse = new ComplaintsFetchResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintsResponseBody> fetchResolvedComplaints(@RequestParam("userId") @ValidUserId String userId) {
+
+        List<ComplaintDTO> resolvedComplaints = complaintService.getResolvedComplaints(userId);
+
+        ComplaintsResponseBody successResponse = new ComplaintsResponseBody(
+                "Fetched list of resolved complaints successfully.",
+                HttpStatus.OK.value(),
+                resolvedComplaints
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PostMapping("/user-feedback")
-    public ResponseEntity<ComplaintFeedbackResponseBody> saveUserFeedback(@RequestBody ComplaintFeedbackDTO complaintFeedbackDTO) {
-        try {
-            complaintService.saveUserFeedback(complaintFeedbackDTO);
-            ComplaintFeedbackResponseBody successResponse = new ComplaintFeedbackResponseBody(
-                    "Complaint feedback saved successfully.",
-                    HttpStatus.OK.value(),
-                    complaintFeedbackDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            ComplaintFeedbackResponseBody errorResponse = new ComplaintFeedbackResponseBody(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    complaintFeedbackDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintFeedbackResponseBody> saveUserFeedback(@Valid @RequestBody ComplaintFeedbackDTO complaintFeedbackDTO) {
+
+        complaintService.saveUserFeedback(complaintFeedbackDTO);
+
+        ComplaintFeedbackResponseBody successResponse = new ComplaintFeedbackResponseBody(
+                "Complaint feedback saved successfully.",
+                HttpStatus.OK.value(),
+                complaintFeedbackDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update-state")
-    public ResponseEntity<ComplaintUpdateResponseBody<UpdateComplaintStateDTO>> updateComplaintState(@RequestBody UpdateComplaintStateDTO updateComplaintStateDTO) {
-        try {
-            complaintService.updateState(updateComplaintStateDTO);
-            ComplaintUpdateResponseBody<UpdateComplaintStateDTO> successResponse = new ComplaintUpdateResponseBody<>(
-                    "Complaint state updated successfully.",
-                    HttpStatus.OK.value(),
-                    updateComplaintStateDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch (Exception exception) {
-            ComplaintUpdateResponseBody<UpdateComplaintStateDTO> errorResponse = new ComplaintUpdateResponseBody<>(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    updateComplaintStateDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<ComplaintResponseBody<UpdateComplaintStateDTO>> updateComplaintState(
+            @Valid @RequestBody UpdateComplaintStateDTO updateComplaintStateDTO) {
+
+        complaintService.updateState(updateComplaintStateDTO);
+
+        ComplaintResponseBody<UpdateComplaintStateDTO> successResponse = new ComplaintResponseBody<>(
+                "Complaint state updated successfully.",
+                HttpStatus.OK.value(),
+                updateComplaintStateDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 }

@@ -1,18 +1,13 @@
 package com.srinivasa.refrigeration.works.srw_springboot.payload.response;
 
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class LogoutResponseBody {
+@EqualsAndHashCode(callSuper = true)
+public class LogoutResponseBody extends BaseResponseBody {
 
     public LogoutResponseBody(String message, int status) {
-        this.message = message;
-        this.status = status;
+        super(message, status);
     }
-
-    private String message;
-    private int status;
-    private LocalDateTime timeStamp = LocalDateTime.now();
 }

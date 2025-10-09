@@ -7,10 +7,10 @@ import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.ChangePasswo
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.CredentialsDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UserCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.repository.UserCredentialRepository;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.NotificationMessages;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.notificationUtils.NotificationMessages;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.PhoneNumberFormatter;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserType;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserType;
+import com.srinivasa.refrigeration.works.srw_springboot.exceptions.UserValidationException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -33,9 +33,11 @@ public class UserCredentialService {
     @Transactional
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void saveCredential(UserCredentialDTO userCredentialDTO, String userId, UserType userType) {
+
         if(userCredentialDTO.getAgreedToTerms() != 1) {
             throw new IllegalArgumentException("Please accept the Terms and Conditions to complete registration.");
         }
+
         UserCredential userCredential = userCredentialMapper.toEntity(userCredentialDTO);
         userCredential.setUserId(userId);
         userCredential.setPhoneNumber(PhoneNumberFormatter.formatPhoneNumber(userCredential.getPhoneNumber()));
@@ -43,10 +45,12 @@ public class UserCredentialService {
         userCredential.setEnabled(userType.equals(UserType.CUSTOMER) ? (short) 1 : (short) 0);
         userCredential.setAgreedToTerms(userCredentialDTO.getAgreedToTerms());
         userCredential.setPassword(passwordEncoder.encode(userCredential.getPassword()));
+
         userCredentialRepository.save(userCredential);
     }
 
     public Map<String, String> userValidationAndGetUserId(CredentialsDTO credentialsDTO) {
+
         UserCredential userCredential = userCredentialRepository.findByLoginId(credentialsDTO.getLoginId().toLowerCase());
         if(userCredential == null) {
             throw new UserValidationException("Invalid login id");
@@ -74,7 +78,7 @@ public class UserCredentialService {
                           ? PhoneNumberFormatter.formatPhoneNumber(identifier)
                           : identifier)
                   .orElse(null);
-          return userCredential != null ? userCredential.getUsername() : null;
+          return userCredential != null ? userCredential.getUsername() : "";
     }
 
     @Cacheable(value = "user-credential", key = "'validate-' + #accountRecoveryDTO.loginId + '&' + #accountRecoveryDTO.phoneNumber")
@@ -85,16 +89,21 @@ public class UserCredentialService {
 
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
     public void updatePassword(Object DTO, boolean isAuthenticated) {
+
         if(isAuthenticated) {
             ChangePasswordDTO changePasswordDTO = (ChangePasswordDTO) DTO;
+
             UserCredential userCredential = userCredentialRepository
                     .findByIdentifier(changePasswordDTO.getUsername())
                     .orElse(null);
+
             if(userCredential != null && !passwordEncoder.matches(changePasswordDTO.getOldPassword(), userCredential.getPassword())) {
                 throw new UserValidationException("Invalid current password");
             }
+
             userCredentialRepository.updatePassword(changePasswordDTO.getUsername(),
                     passwordEncoder.encode(changePasswordDTO.getNewPassword()), LocalDateTime.now());
+
             notificationService.saveNotification(
                     NotificationMessages.buildPasswordUpdatedNotification(
                             userCredential != null ? userCredential.getUserId() : "",
@@ -104,16 +113,19 @@ public class UserCredentialService {
         }
         else {
             AccountRecoveryDTO accountRecoveryDTO = (AccountRecoveryDTO) DTO;
+
             UserCredential userCredential = userCredentialRepository
                     .findByIdentifier(accountRecoveryDTO.getLoginId())
                     .orElse(null);
+
             if(userCredential != null && passwordEncoder.matches(accountRecoveryDTO.getPassword(), userCredential.getPassword())) {
-                throw new UserValidationException("New password must be different from the old password.");
+                throw new IllegalArgumentException("New password must be different from the old password.");
             }
             else {
                 userCredentialRepository.updatePassword(accountRecoveryDTO.getLoginId(),
                         passwordEncoder.encode(accountRecoveryDTO.getPassword()), LocalDateTime.now()
                 );
+
                 notificationService.saveNotification(
                         NotificationMessages.buildPasswordUpdatedNotification(
                                 userCredential != null ? userCredential.getUserId() : "",

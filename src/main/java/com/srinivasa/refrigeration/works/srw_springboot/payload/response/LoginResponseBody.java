@@ -2,24 +2,20 @@ package com.srinivasa.refrigeration.works.srw_springboot.payload.response;
 
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.AuthenticatedUserDTO;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class LoginResponseBody {
+@EqualsAndHashCode(callSuper = true)
+public class LoginResponseBody extends BaseResponseBody {
+
+    private String token;
+    private AuthenticatedUserDTO userDetails;
+    private long expiresIn;
 
     public LoginResponseBody(String message, int status, String token, AuthenticatedUserDTO userDetails, long expiresIn) {
-        this.message = message;
-        this.status = status;
+        super(message, status);
         this.token = token;
         this.userDetails = userDetails;
         this.expiresIn = expiresIn;
     }
-
-    private String message;
-    private int status;
-    private String token;
-    private AuthenticatedUserDTO userDetails;
-    private long expiresIn;
-    private LocalDateTime timeStamp = LocalDateTime.now();
 }

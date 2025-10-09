@@ -3,36 +3,40 @@ package com.srinivasa.refrigeration.works.srw_springboot.controller;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OwnerCredentialDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.UpdateUserStatusDTO;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.FetchUsersResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserProfileUpdateResponseBody;
-import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserRegisterResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UsersResponseBody;
+import com.srinivasa.refrigeration.works.srw_springboot.payload.response.UserResponseBody;
 import com.srinivasa.refrigeration.works.srw_springboot.service.OwnerService;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.DuplicateValueCheck;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserStatus;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.UserValidationException;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.UserStatus;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.ownerGroups.OwnerRegisterGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validationGroups.ownerGroups.OwnerUpdateGroup;
+import com.srinivasa.refrigeration.works.srw_springboot.validations.userIdValidation.ValidUserId;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/srw/owner")
 @RequiredArgsConstructor
+@Validated
 public class OwnerController {
 
     private final OwnerService ownerService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegisterResponseBody<OwnerDTO>> register(@RequestBody OwnerCredentialDTO ownerCredentialDTO) {
-        OwnerDTO ownerDTO = ownerCredentialDTO.getOwnerDTO();
+    public ResponseEntity<UserResponseBody<OwnerDTO>> register(
+            @Validated(OwnerRegisterGroup.class) @RequestBody OwnerCredentialDTO ownerCredentialDTO) {
+
         try {
-            ownerDTO = ownerService.addOwner(ownerCredentialDTO);
-            UserRegisterResponseBody<OwnerDTO> successResponse = new UserRegisterResponseBody<>(
+            OwnerDTO ownerDTO = ownerService.addOwner(ownerCredentialDTO);
+
+            UserResponseBody<OwnerDTO> successResponse = new UserResponseBody<>(
                     "Registered successfully. Please login",
                     HttpStatus.OK.value(),
                     ownerDTO
@@ -40,74 +44,42 @@ public class OwnerController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
+            UserResponseBody<OwnerDTO> errorResponse = new UserResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("owners", exception),
                     HttpStatus.CONFLICT.value(),
-                    ownerDTO
+                    new OwnerDTO()
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch (UserValidationException exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.CONFLICT.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch (IllegalArgumentException exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.NOT_ACCEPTABLE.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserRegisterResponseBody<OwnerDTO> errorResponse = new UserRegisterResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseBody<OwnerDTO>> fetchProfile(@RequestParam("ownerId") String ownerId) {
-        OwnerDTO ownerDTO = new OwnerDTO();
-        try {
-            ownerDTO = (OwnerDTO) ownerService.getOwnerByIdentifier(ownerId, false);
-            UserProfileResponseBody<OwnerDTO> successResponse = new UserProfileResponseBody<>(
-                    "Owner: " + ownerId +  " profile fetched successfully.",
-                    HttpStatus.OK.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(SecurityException exception) {
-            UserProfileResponseBody<OwnerDTO> errorResponse = new UserProfileResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.FORBIDDEN.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserProfileResponseBody<OwnerDTO> errorResponse = new UserProfileResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    ownerDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UserResponseBody<OwnerDTO>> fetchProfile(
+            @RequestParam("ownerId")
+            @ValidUserId(
+                    requiredMessage = "Owner ID is required.",
+                    message = "Invalid owner ID format."
+            )
+            String ownerId) {
+
+        OwnerDTO ownerDTO = (OwnerDTO) ownerService.getOwnerByIdentifier(ownerId, false);
+
+        UserResponseBody<OwnerDTO> successResponse = new UserResponseBody<>(
+                "Owner: " + ownerId +  " profile fetched successfully.",
+                HttpStatus.OK.value(),
+                ownerDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update-profile")
-    public ResponseEntity<UserProfileUpdateResponseBody<OwnerDTO>> updateProfile(@RequestBody OwnerCredentialDTO ownerCredentialDTO) {
+    public ResponseEntity<UserResponseBody<OwnerDTO>> updateProfile(
+            @Validated(OwnerUpdateGroup.class) @RequestBody OwnerCredentialDTO ownerCredentialDTO) {
+
         try {
             OwnerDTO updateOwnerDTO = ownerService.updateOwner(ownerCredentialDTO);
-            UserProfileUpdateResponseBody<OwnerDTO> successResponse = new UserProfileUpdateResponseBody<>(
+
+            UserResponseBody<OwnerDTO> successResponse = new UserResponseBody<>(
                     "Profile updated successfully.",
                     HttpStatus.OK.value(),
                     updateOwnerDTO
@@ -115,71 +87,40 @@ public class OwnerController {
             return ResponseEntity.ok(successResponse);
         }
         catch (DataIntegrityViolationException exception) {
-            UserProfileUpdateResponseBody<OwnerDTO> errorResponse = new UserProfileUpdateResponseBody<>(
+            UserResponseBody<OwnerDTO> errorResponse = new UserResponseBody<>(
                     DuplicateValueCheck.buildDuplicateValueErrorResponse("owners", exception),
                     HttpStatus.CONFLICT.value(),
                     ownerCredentialDTO.getOwnerDTO()
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-        catch (UserValidationException exception) {
-            UserProfileUpdateResponseBody<OwnerDTO> errorResponse = new UserProfileUpdateResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.CONFLICT.value(),
-                    ownerCredentialDTO.getOwnerDTO()
-            );
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-        }
-        catch(Exception exception) {
-            UserProfileUpdateResponseBody<OwnerDTO> errorResponse = new UserProfileUpdateResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    ownerCredentialDTO.getOwnerDTO()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
     }
 
     @GetMapping("/list")
-    public ResponseEntity<FetchUsersResponseBody<OwnerDTO>> fetchAllOwners() {
-        try {
-            List<OwnerDTO> ownersDTO = ownerService.getOwnerList();
-            FetchUsersResponseBody<OwnerDTO> successResponse = new FetchUsersResponseBody<>(
-                    "List of all owners fetched successfully.",
-                    HttpStatus.OK.value(),
-                    ownersDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            FetchUsersResponseBody<OwnerDTO> errorResponse = new FetchUsersResponseBody<>(
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    Collections.emptyList()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UsersResponseBody<OwnerDTO>> fetchAllOwners() {
+
+        List<OwnerDTO> ownersDTO = ownerService.getOwnerList();
+
+        UsersResponseBody<OwnerDTO> successResponse = new UsersResponseBody<>(
+                "List of all owners fetched successfully.",
+                HttpStatus.OK.value(),
+                ownersDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping("/update-status")
-    public ResponseEntity<UserProfileResponseBody<UpdateUserStatusDTO>> updateStatus(@RequestBody UpdateUserStatusDTO updateUserStatusDTO) {
-        try {
-            ownerService.updateStatus(updateUserStatusDTO);
-            UserProfileResponseBody<UpdateUserStatusDTO> successResponse = new UserProfileResponseBody<>(
-                    updateUserStatusDTO.getUserStatus().equals(UserStatus.ACTIVE) ? "Activated " : "Deactivated "
-                            + updateUserStatusDTO.getUserId() + " successfully.",
-                    HttpStatus.OK.value(),
-                    updateUserStatusDTO
-            );
-            return ResponseEntity.ok(successResponse);
-        }
-        catch(Exception exception) {
-            UserProfileResponseBody<UpdateUserStatusDTO> errorResponse = new UserProfileResponseBody<>(
-                    "Error: " + exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    updateUserStatusDTO
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+    public ResponseEntity<UserResponseBody<UpdateUserStatusDTO>> updateStatus(
+            @Valid @RequestBody UpdateUserStatusDTO updateUserStatusDTO) {
+
+        ownerService.updateStatus(updateUserStatusDTO);
+
+        UserResponseBody<UpdateUserStatusDTO> successResponse = new UserResponseBody<>(
+                updateUserStatusDTO.getUserStatus().equals(UserStatus.ACTIVE) ? "Activated " : "Deactivated "
+                        + updateUserStatusDTO.getUserId() + " successfully.",
+                HttpStatus.OK.value(),
+                updateUserStatusDTO
+        );
+        return ResponseEntity.ok(successResponse);
     }
 }

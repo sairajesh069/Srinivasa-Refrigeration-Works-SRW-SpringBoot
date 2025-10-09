@@ -1,17 +1,13 @@
 package com.srinivasa.refrigeration.works.srw_springboot.payload.response;
 
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class HomeResponseBody {
+@EqualsAndHashCode(callSuper = true)
+public class HomeResponseBody extends BaseResponseBody {
 
     public HomeResponseBody(String message, int status) {
-        this.message = message;
-        this.status = status;
+        super(message, status);
     }
-
-    private String message;
-    private int status;
-    private LocalDateTime timeStamp = LocalDateTime.now();
 }
