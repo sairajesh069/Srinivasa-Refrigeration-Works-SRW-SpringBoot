@@ -27,7 +27,8 @@ public class AccountRecoveryController {
     public ResponseEntity<AccountRecoveryResponseBody> fetchUsername(
             @Validated(ForgotUsernameGroup.class) @RequestBody AccountRecoveryDTO accountRecoveryDTO) {
 
-        String username = userCredentialService.fetchUsername(accountRecoveryDTO.getPhoneNumber());
+        String username = userCredentialService.fetchUsername(accountRecoveryDTO.getPhoneNumber(),
+                accountRecoveryDTO.getOtp(), false);
         if(username.isEmpty()) {
             throw new UserValidationException("User doesn't exist.");
         }

@@ -32,12 +32,27 @@ public class OwnerService {
     private final OwnerMapper ownerMapper;
     private final EmployeeRepository employeeRepository;
     private final UserCredentialService userCredentialService;
+    private final OtpService otpService;
     private final AccessCheck accessCheck;
     private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "owners", allEntries = true)
     public OwnerDTO addOwner(OwnerCredentialDTO ownerCredentialDTO) {
+
+        boolean isOtpRequired = accessCheck.isOtpVerificationRequired();
+
+        String phoneNumber = ownerCredentialDTO.getUserCredentialDTO().getPhoneNumber();
+        FieldConsistencyValidator.validate(ownerCredentialDTO.getOwnerDTO().getPhoneNumber(), phoneNumber, "Phone Number");
+        if(isOtpRequired) {
+            otpService.validateOtp(phoneNumber, ownerCredentialDTO.getOwnerDTO().getPhoneNumberOtp(), "phone number");
+        }
+
+        String email = ownerCredentialDTO.getUserCredentialDTO().getEmail();
+        FieldConsistencyValidator.validate(ownerCredentialDTO.getOwnerDTO().getEmail(), email, "Email");
+        if(isOtpRequired) {
+            otpService.validateOtp(email, ownerCredentialDTO.getOwnerDTO().getEmailOtp(), "email");
+        }
 
         Owner owner = ownerMapper.toEntity(ownerCredentialDTO.getOwnerDTO());
         owner.setOwnerReference(UserIdGenerator.generateUniqueId(owner.getPhoneNumber()));
@@ -119,6 +134,25 @@ public class OwnerService {
         }
 
         if(ownerCredentialDTO.getUserCredentialDTO().getUserId() != null) {
+
+            boolean isOtpRequired = accessCheck.isOtpVerificationRequired();
+
+            String phoneNumber = ownerCredentialDTO.getUserCredentialDTO().getPhoneNumber();
+            if(phoneNumber != null) {
+                FieldConsistencyValidator.validate(ownerDTO.getPhoneNumber(), phoneNumber, "Phone number");
+                if(isOtpRequired) {
+                    otpService.validateOtp(phoneNumber, ownerCredentialDTO.getOwnerDTO().getPhoneNumberOtp(), "phone number");
+                }
+            }
+
+            String email = ownerCredentialDTO.getUserCredentialDTO().getEmail();
+            if(email != null) {
+                FieldConsistencyValidator.validate(ownerDTO.getEmail(), email, "Email");
+                if(isOtpRequired) {
+                    otpService.validateOtp(email, ownerCredentialDTO.getOwnerDTO().getEmailOtp(), "email");
+                }
+            }
+
             userCredentialService.updateDetails(ownerCredentialDTO.getUserCredentialDTO());
         }
 

@@ -29,6 +29,7 @@ public class UserCredentialService {
     private final UserCredentialMapper userCredentialMapper;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final OtpService otpService;
 
     @Transactional
     @CacheEvict(cacheNames = "user-credential", allEntries = true)
@@ -72,19 +73,28 @@ public class UserCredentialService {
     }
 
     @Cacheable(value = "user-credential", key = "'fetch_user-' + #identifier")
-    public String fetchUsername(String identifier) {
-          UserCredential userCredential = userCredentialRepository
-                  .findByIdentifier(identifier.matches("^[0-9]{10}$")
-                          ? PhoneNumberFormatter.formatPhoneNumber(identifier)
-                          : identifier)
-                  .orElse(null);
-          return userCredential != null ? userCredential.getUsername() : "";
+    public String fetchUsername(String identifier, String otp, boolean isAuthenticated) {
+
+        if(!isAuthenticated) {
+            otpService.validateOtp(identifier, otp, "phone number");
+        }
+
+        UserCredential userCredential = userCredentialRepository
+            .findByIdentifier(identifier.matches("^[0-9]{10}$")
+                ? PhoneNumberFormatter.formatPhoneNumber(identifier)
+                : identifier)
+        .orElse(null);
+        return userCredential != null ? userCredential.getUsername() : "";
     }
 
     @Cacheable(value = "user-credential", key = "'validate-' + #accountRecoveryDTO.loginId + '&' + #accountRecoveryDTO.phoneNumber")
     public boolean validateUser(AccountRecoveryDTO accountRecoveryDTO) {
+
+        String phoneNumber = accountRecoveryDTO.getPhoneNumber();
+        otpService.validateOtp(phoneNumber, accountRecoveryDTO.getOtp(), "phone number");
+
         return userCredentialRepository.existsByLoginIdAndPhoneNumber(
-                accountRecoveryDTO.getLoginId(), PhoneNumberFormatter.formatPhoneNumber(accountRecoveryDTO.getPhoneNumber()));
+                accountRecoveryDTO.getLoginId(), PhoneNumberFormatter.formatPhoneNumber(phoneNumber));
     }
 
     @CacheEvict(cacheNames = "user-credential", allEntries = true)

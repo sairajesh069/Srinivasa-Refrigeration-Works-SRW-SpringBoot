@@ -20,6 +20,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountRecoveryDTO implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 12L;
 
@@ -33,6 +34,17 @@ public class AccountRecoveryDTO implements Serializable {
             groups = {ForgotUsernameGroup.class, ValidateUserGroup.class, ForgotPasswordGroup.class}
     )
     private String phoneNumber;
+
+    @NotBlank(
+            message = "OTP is required.",
+            groups = {ForgotUsernameGroup.class, ValidateUserGroup.class}
+    )
+    @Pattern(
+            regexp = FieldValidationConstants.OTP_REGEX,
+            message = "Invalid OTP format.",
+            groups = {ForgotUsernameGroup.class, ValidateUserGroup.class}
+    )
+    private String otp;
 
     @ValidLoginId(groups = {ValidateUserGroup.class, ForgotPasswordGroup.class})
     private String loginId;

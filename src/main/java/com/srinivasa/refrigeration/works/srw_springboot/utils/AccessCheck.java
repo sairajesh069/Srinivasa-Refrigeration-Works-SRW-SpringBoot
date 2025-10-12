@@ -27,4 +27,8 @@ public class AccessCheck {
                 || (SecurityUtil.getCurrentUserType().equals("EMPLOYEE")
                     && assignedToId != null && SecurityUtil.isCurrentUser(assignedToId));
     }
+
+    public boolean isOtpVerificationRequired() {
+        return !SecurityUtil.getCurrentUserType().equals("OWNER");
+    }
 }

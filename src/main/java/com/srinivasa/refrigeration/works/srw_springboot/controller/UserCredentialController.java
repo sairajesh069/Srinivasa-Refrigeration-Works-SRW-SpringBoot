@@ -23,7 +23,7 @@ public class UserCredentialController {
     @GetMapping("/fetch-username")
     public ResponseEntity<UserCredentialResponseBody> fetchUsername(@RequestParam("userId") @ValidUserId String userId) {
 
-        String username = userCredentialService.fetchUsername(userId);
+        String username = userCredentialService.fetchUsername(userId, "", true);
         if(username == null) {
             throw new UserValidationException("User doesn't exist.");
         }

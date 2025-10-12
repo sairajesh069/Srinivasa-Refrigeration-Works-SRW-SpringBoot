@@ -11,6 +11,7 @@ public class FieldValidationConstants {
     public static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     public static final String PHONE_NUMBER_REGEX = "^(\\+91[0-9]{10}|[0-9]{10})$";
     public static final String NATIONAL_ID_NUMBER_REGEX = "^([A-Z]{5}[0-9]{4}[A-Z]{1}|\\d{12})$";
+    public static final String OTP_REGEX = "^[0-9]{6}$";
 
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9\\-@#!?*$.%&]{6,}$";
     public static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%.*?&])[A-Za-z\\d@$!%.*?&]{8,}$";

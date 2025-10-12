@@ -70,6 +70,8 @@ public class CustomerDTO implements Serializable {
     )
     private String phoneNumber;
 
+    private String phoneNumberOtp;
+
     @NotBlank(
             message = "Email is required.",
             groups = {CustomerRegisterGroup.class, CustomerUpdateGroup.class}
@@ -80,6 +82,8 @@ public class CustomerDTO implements Serializable {
             groups = {CustomerRegisterGroup.class, CustomerUpdateGroup.class}
     )
     private String email;
+
+    private String emailOtp;
 
     @NotBlank(
             message = "Address is required.",

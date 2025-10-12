@@ -25,7 +25,7 @@ public class SecurityUtil {
             Map<String, Object> details = (Map<String, Object>) auth.getDetails();
             return (String) details.get("userType");
         }
-        throw new SecurityException("No authenticated user found");
+        return "User";
     }
 
     public static String getCurrentUsername() {

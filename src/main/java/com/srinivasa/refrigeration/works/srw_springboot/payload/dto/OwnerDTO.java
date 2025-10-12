@@ -75,6 +75,8 @@ public class OwnerDTO implements Serializable {
     )
     private String phoneNumber;
 
+    private String phoneNumberOtp;
+
     @NotBlank(
             message = "Email is required.",
             groups = {OwnerRegisterGroup.class, OwnerUpdateGroup.class}
@@ -85,6 +87,8 @@ public class OwnerDTO implements Serializable {
             groups = {OwnerRegisterGroup.class, OwnerUpdateGroup.class}
     )
     private String email;
+
+    private String emailOtp;
 
     @NotBlank(
             message = "Address is required.",

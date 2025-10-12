@@ -73,6 +73,8 @@ public class EmployeeDTO implements Serializable {
     )
     private String phoneNumber;
 
+    private String phoneNumberOtp;
+
     @NotBlank(
             message = "Email is required.",
             groups = {EmployeeRegisterGroup.class, EmployeeUpdateGroup.class}
@@ -83,6 +85,8 @@ public class EmployeeDTO implements Serializable {
             groups = {EmployeeRegisterGroup.class, EmployeeUpdateGroup.class}
     )
     private String email;
+
+    private String emailOtp;
 
     @NotBlank(
             message = "Address is required.",

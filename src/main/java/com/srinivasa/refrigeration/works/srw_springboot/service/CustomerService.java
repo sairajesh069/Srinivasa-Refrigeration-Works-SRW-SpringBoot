@@ -30,12 +30,27 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final UserCredentialService userCredentialService;
+    private final OtpService otpService;
     private final AccessCheck accessCheck;
     private final NotificationService notificationService;
 
     @Transactional
     @CacheEvict(cacheNames = "customers", allEntries = true)
     public CustomerDTO addCustomer(CustomerCredentialDTO customerCredentialDTO) {
+
+        boolean isOtpRequired = accessCheck.isOtpVerificationRequired();
+
+        String phoneNumber = customerCredentialDTO.getUserCredentialDTO().getPhoneNumber();
+        FieldConsistencyValidator.validate(customerCredentialDTO.getCustomerDTO().getPhoneNumber(), phoneNumber, "Phone number");
+        if(isOtpRequired) {
+            otpService.validateOtp(phoneNumber, customerCredentialDTO.getCustomerDTO().getPhoneNumberOtp(), "phone number");
+        }
+
+        String email = customerCredentialDTO.getUserCredentialDTO().getEmail();
+        FieldConsistencyValidator.validate(customerCredentialDTO.getCustomerDTO().getEmail(), email, "Email");
+        if(isOtpRequired) {
+            otpService.validateOtp(email, customerCredentialDTO.getCustomerDTO().getEmailOtp(), "email");
+        }
 
         Customer customer = customerMapper.toEntity(customerCredentialDTO.getCustomerDTO());
         customer.setCustomerReference(UserIdGenerator.generateUniqueId(customer.getPhoneNumber()));
@@ -109,6 +124,25 @@ public class CustomerService {
         customer.setUpdatedAt(LocalDateTime.now());
 
         if(customerCredentialDTO.getUserCredentialDTO().getUserId() != null) {
+
+            boolean isOtpRequired = accessCheck.isOtpVerificationRequired();
+
+            String phoneNumber = customerCredentialDTO.getUserCredentialDTO().getPhoneNumber();
+            if(phoneNumber != null) {
+                FieldConsistencyValidator.validate(customerDTO.getPhoneNumber(), phoneNumber, "Phone number");
+                if(isOtpRequired) {
+                    otpService.validateOtp(phoneNumber, customerCredentialDTO.getCustomerDTO().getPhoneNumberOtp(), "phone number");
+                }
+            }
+
+            String email = customerCredentialDTO.getUserCredentialDTO().getEmail();
+            if(email != null) {
+                FieldConsistencyValidator.validate(customerDTO.getEmail(), email, "Email");
+                if(isOtpRequired) {
+                    otpService.validateOtp(email, customerCredentialDTO.getCustomerDTO().getEmailOtp(), "email");
+                }
+            }
+
             userCredentialService.updateDetails(customerCredentialDTO.getUserCredentialDTO());
         }
 
