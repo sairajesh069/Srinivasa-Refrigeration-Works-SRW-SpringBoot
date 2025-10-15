@@ -1,4 +1,4 @@
-package com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils;
+package com.srinivasa.refrigeration.works.srw_springboot.utils.otpUtils;
 
 import java.security.SecureRandom;
 

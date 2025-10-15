@@ -1,7 +1,8 @@
 package com.srinivasa.refrigeration.works.srw_springboot.service;
 
+import com.srinivasa.refrigeration.works.srw_springboot.payload.dto.OtpGenerationDTO;
 import com.srinivasa.refrigeration.works.srw_springboot.utils.FieldValidationConstants;
-import com.srinivasa.refrigeration.works.srw_springboot.utils.userUtils.OtpGenerator;
+import com.srinivasa.refrigeration.works.srw_springboot.utils.otpUtils.OtpGenerator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,9 @@ public class OtpService {
         this.redisTemplate = redisTemplate;
     }
 
-    public void generateOtp(String userIdentifier) {
+    public void generateOtp(OtpGenerationDTO otpGenerationDTO) {
 
+        String userIdentifier = otpGenerationDTO.getUserIdentifier();
         checkRateLimit(userIdentifier);
 
         String otpKey = OTP_PREFIX + userIdentifier;
