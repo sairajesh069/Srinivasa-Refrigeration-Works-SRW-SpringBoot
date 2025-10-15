@@ -70,6 +70,7 @@ public class ComplaintDTO implements Serializable {
     )
     private String contactNumber;
 
+    private String otp;
     private String email;
 
     @NotNull(

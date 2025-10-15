@@ -34,6 +34,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, String> {
     @Query("""
     UPDATE Complaint c 
        SET c.complaintState = :complaintState,
+           c.status = :complaintStatus,
            c.updatedAt = :timestamp,
            c.closedAt = CASE WHEN :complaintState = com.srinivasa.refrigeration.works.srw_springboot.utils.complaintUtils.ComplaintState.CLOSED 
                              THEN :timestamp ELSE c.closedAt END,
@@ -41,5 +42,5 @@ public interface ComplaintRepository extends JpaRepository<Complaint, String> {
                                THEN :timestamp ELSE c.reopenedAt END
      WHERE c.complaintId = :complaintId
 """)
-    void updateState(@Param("complaintId") String complaintId, @Param("complaintState") ComplaintState complaintState, @Param("timestamp") LocalDateTime timestamp);
+    void updateState(@Param("complaintId") String complaintId, @Param("complaintState") ComplaintState complaintState, @Param("complaintStatus") ComplaintStatus complaintStatus, @Param("timestamp") LocalDateTime timestamp);
 }

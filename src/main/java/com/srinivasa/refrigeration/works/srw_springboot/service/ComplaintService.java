@@ -30,6 +30,7 @@ public class ComplaintService {
     private final ComplaintMapper complaintMapper;
     private final ComplaintRepository complaintRepository;
     private final AccessCheck accessCheck;
+    private final OtpService otpService;
     private final NotificationService notificationService;
 
     @Transactional
@@ -201,7 +202,11 @@ public class ComplaintService {
                 );
             }
 
-            if(complaintDTO.getStatus().equals(ComplaintStatus.RESOLVED)) {
+            if(complaintDTO.getStatus().equals(ComplaintStatus.RESOLVED) && !complaintDTO.getComplaintState().equals(ComplaintState.CLOSED)) {
+
+                if(accessCheck.isComplaintClosureOtpRequired()) {
+                    otpService.validateOtp(complaintDTO.getContactNumber(), complaintDTO.getOtp(), "phone number");
+                }
 
                 complaint.setComplaintState(ComplaintState.CLOSED);
                 complaint.setClosedAt(LocalDateTime.now());
@@ -224,6 +229,20 @@ public class ComplaintService {
                         )
                 );
             }
+        }
+
+        if(complaintDTO.getStatus().equals(ComplaintStatus.PENDING) && complaintDTO.getComplaintState().equals(ComplaintState.CLOSED)) {
+
+            complaint.setComplaintState(ComplaintState.REOPENED);
+            complaint.setReopenedAt(LocalDateTime.now());
+            notificationService.saveNotification(
+                    NotificationMessages.buildComplaintReopenedNotification(
+                            complaintDTO.getProductType(),
+                            complaintDTO.getComplaintId(),
+                            complaintDTO.getBookedById(),
+                            LocalDateTime.now()
+                    )
+            );
         }
 
         if(!(complaintDTO.getInitialAssigneeId() == null || complaintDTO.getInitialAssigneeId().isEmpty()) && !complaintDTO.getTechnicianDetails().getEmployeeId().equals(complaintDTO.getInitialAssigneeId())) {
@@ -321,12 +340,16 @@ public class ComplaintService {
     )
     public void updateState(UpdateComplaintStateDTO updateComplaintStateDTO) {
 
-        if(accessCheck.canAccessUpdateComplaintState(updateComplaintStateDTO.getAssignedTo())) {
+        if(accessCheck.canAccessUpdateComplaintState()) {
+
+            ComplaintState complaintState = updateComplaintStateDTO.getComplaintState();
+            ComplaintStatus complaintStatus = complaintState.equals(ComplaintState.REOPENED)
+                    ? ComplaintStatus.PENDING : ComplaintStatus.RESOLVED;
 
             complaintRepository.updateState(updateComplaintStateDTO.getComplaintId(),
-                    updateComplaintStateDTO.getComplaintState(), LocalDateTime.now());
+                    complaintState, complaintStatus, LocalDateTime.now());
 
-            if(updateComplaintStateDTO.getComplaintState().equals(ComplaintState.REOPENED)) {
+            if(complaintState.equals(ComplaintState.REOPENED)) {
                 notificationService.saveNotification(
                         NotificationMessages.buildComplaintReopenedNotification(
                                 updateComplaintStateDTO.getProductType(),

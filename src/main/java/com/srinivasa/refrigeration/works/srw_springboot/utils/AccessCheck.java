@@ -22,13 +22,15 @@ public class AccessCheck {
                 || (assignedToId != null && SecurityUtil.isCurrentUser(assignedToId));
     }
 
-    public boolean canAccessUpdateComplaintState(String assignedToId) {
-        return SecurityUtil.getCurrentUserType().equals("OWNER")
-                || (SecurityUtil.getCurrentUserType().equals("EMPLOYEE")
-                    && assignedToId != null && SecurityUtil.isCurrentUser(assignedToId));
+    public boolean canAccessUpdateComplaintState() {
+        return SecurityUtil.getCurrentUserType().equals("OWNER");
     }
 
     public boolean isOtpVerificationRequired() {
         return !SecurityUtil.getCurrentUserType().equals("OWNER");
+    }
+
+    public boolean isComplaintClosureOtpRequired() {
+        return SecurityUtil.getCurrentUserType().equals("EMPLOYEE");
     }
 }
